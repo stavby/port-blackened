@@ -1,0 +1,30 @@
+{
+  "name": "@port/lens-handler-requests",
+  "version": "1.0.0",
+  "description": "Contains axios api requests with types to lens-handler",
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint .",
+    "dev": "tsup --watch"
+  },
+  "private": true,
+  "type": "module",
+  "exports": {
+    "require": "./dist/index.cjs",
+    "import": "./dist/index.js"
+  },
+  "types": "./dist/index.d.ts",
+  "dependencies": {
+    "@port/server-files": "*",
+    "@port/utils": "*",
+    "@port/common-schemas": "*",
+    "axios": "^1.7.7"
+  },
+  "devDependencies": {
+    "@port/ts-config": "*",
+    "@port/tsup-config": "*",
+    "@port/eslint-config": "*",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.3"
+  }
+}

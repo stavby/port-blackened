@@ -1,0 +1,31 @@
+{
+  "name": "port",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev:connect": "turbo run dev --filter=@port/connect-api --filter=@port/connect-client",
+    "dev:shield": "turbo run dev --filter=@port/shield-api --filter=@port/shield-client",
+    "dev:remix": "turbo run dev --filter=@port/remix",
+    "dev:platform": "turbo run dev --filter=@port/platform",
+    "dev:shield-bay": "turbo run dev --filter=@port/shield-bay",
+    "dev:lens-handler": "turbo run dev --filter=@port/lens-handler",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json,css}\"",
+    "lint": "turbo run lint"
+  },
+  "packageManager": "npm@10.5.0",
+  "workspaces": [
+    "apps/*",
+    "packages/shared/*",
+    "packages/shared/connect/*",
+    "packages/shared/shield/*",
+    "packages/shared/ui/*",
+    "packages/config/*",
+    "packages/services/*",
+    "packages/tests/*"
+  ],
+  "devDependencies": {
+    "prettier": "^3.5.2",
+    "turbo": "2.4.4",
+    "typescript": "^5.7.3"
+  }
+}

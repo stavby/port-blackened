@@ -1,0 +1,10 @@
+{
+  "extends": "@port/ts-config/tsup-compiled-package.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "moduleResolution": "Bundler",
+    "module": "ESNext"
+  },
+  "include": ["src"]
+}

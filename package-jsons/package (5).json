@@ -1,0 +1,14 @@
+{
+  "name": "@port/load-tests",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": { },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@port/ts-config": "*",
+    "@types/k6": "^1.2.0",
+    "typescript": "^5.7.3"
+  }
+}

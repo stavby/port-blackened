@@ -1,0 +1,33 @@
+{
+  "name": "@port/captain",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint .",
+    "codegen": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=1 openapi-typescript <redacted>/openapi.json --empty-objects-unknown -o ./src/schema.ts"
+  },
+  "exports": {
+    "./client": {
+      "requires": "./dist/index.cjs",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./schema": {
+      "types": "./dist/schema.d.ts"
+    }
+  },
+  "devDependencies": {
+    "@port/ts-config": "*",
+    "@port/tsup-config": "*",
+    "@port/eslint-config": "*",
+    "cross-env": "^7.0.3",
+    "openapi-typescript": "^7.6.1",
+    "tsup": "^8.3.6",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.13.5"
+  }
+}

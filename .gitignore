@@ -1,0 +1,40 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Local env
+.env
+.env.local
+.env.development.local
+.env.production.local
+
+# Turbo
+.turbo
+
+# Build outputs
+.next/
+out/
+build
+dist 
+__pycache__
+.Docker
+next-env.d.ts
+vite.config.ts.timestamp-*
+
+# Debug
+npm-debug.log*
+
+# Misc
+.DS_Store
+
+# Editor settings
+/.vscode/
+
+# CICD generated files
+generated_values.yaml
+child_pipeline.yml
+all.env
+loadtest-results/
+
+debug.log

@@ -1,0 +1,19 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: shield
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
+
+# Mongoose connection string:
+# mongodb://admin:password@localhost:27017/shield?authSource=admin

@@ -1,0 +1,27 @@
+{
+  "name": "@port/logger",
+  "version": "1.0.0",
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "@port/eslint-config": "^0.0.0",
+    "@port/ts-config": "^0.0.0",
+    "@port/tsup-config": "^0.0.0",
+    "@types/node": "^24.1.0"
+  }
+}

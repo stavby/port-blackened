@@ -1,0 +1,39 @@
+{
+  "name": "@port/utils",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint ."
+  },
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./constants": {
+      "types": "./dist/constants.d.ts",
+      "import": "./dist/constants.js",
+      "require": "./dist/constants.cjs"
+    },
+    "./swal.css": "./src/swal.css"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tanstack/react-query": "^5.69.0",
+    "axios": "^1.7.7",
+    "sweetalert2": "^11.10.5",
+    "zod": "^3.24.3"
+  },
+  "devDependencies": {
+    "@port/eslint-config": "*",
+    "@port/ts-config": "*",
+    "@port/tsup-config": "*",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.2"
+  }
+}

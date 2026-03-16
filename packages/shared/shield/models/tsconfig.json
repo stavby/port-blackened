@@ -1,0 +1,9 @@
+{
+  "extends": "@port/ts-config/nestjs.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist",
+    "strictPropertyInitialization": false
+  },
+  "include": ["src"]
+}

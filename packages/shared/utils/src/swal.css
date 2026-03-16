@@ -1,0 +1,31 @@
+.swal2-container {
+    z-index: 2000;
+  }
+  
+  .colored-toast.swal2-icon-error {
+    background-color: #f27474 !important;
+  }
+  
+  .colored-toast.swal2-icon-success {
+    background-color: #a5dc86 !important;
+  }
+  
+  .colored-toast.swal2-icon-warning {
+    background-color: #ffab61 !important;
+  }
+  
+  .colored-toast.swal2-icon-info {
+    background-color: #98a5a7 !important;
+  }
+  
+  .colored-toast.swal2-icon-question {
+    background-color: #37adbd !important;
+  }
+  
+  .colored-toast .swal2-title,
+  .colored-toast .swal2-html-container,
+  .colored-toast .swal2-close {
+    color: white;
+    direction: rtl;
+  }
+

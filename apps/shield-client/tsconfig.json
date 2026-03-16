@@ -1,0 +1,42 @@
+{
+  "extends": "@port/ts-config/vite.json",
+  "exclude": ["dist/**/*"],
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": "./",
+    "paths": {
+      "@types/*": ["src/types/*"],
+      "@types": ["src/types"],
+
+      "@store/*": ["src/store/*"],
+      "@store": ["src/store"],
+
+      "@themes/*": ["src/themes/*"],
+      "@themes": ["src/themes"],
+
+      "@screens/*": ["src/screens/*"],
+      "@screens": ["src/screens"],
+
+      "@constants/*": ["src/constants/*"],
+      "@constants": ["src/constants"],
+
+      "@components/*": ["src/components/*"],
+      "@components": ["src/components"],
+
+      "@api/*": ["src/api/*"],
+      "@api": ["src/api"],
+
+      "@helpers/*": ["src/helpers/*"],
+      "@helpers": ["src/helpers"],
+
+      "@assets/*": ["src/assets/*"],
+      "@assets": ["src/assets"],
+
+      "@contexts/*": ["src/contexts/*"],
+      "@contexts": ["src/contexts"]
+    }
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}

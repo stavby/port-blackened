@@ -1,0 +1,31 @@
+{
+  "name": "@port/shield-models",
+  "version": "1.0.0",
+  "description": "",
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint ."
+  },
+  "types": "./dist/index.d.ts",
+  "exports": "./dist/index.js",
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@port/eslint-config": "*",
+    "@port/ts-config": "*",
+    "@port/tsup-config": "*",
+    "@swc/core": "^1.11.11",
+    "microdiff": "^1.4.0",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.2"
+  },
+  "peerDependencies": {
+    "mongoose": "^8.0.0"
+  },
+  "dependencies": {
+    "@nestjs/mongoose": "^10.0.4",
+    "@nestjs/swagger": "^8.1.1",
+    "@port/common-schemas": "*"
+  }
+}

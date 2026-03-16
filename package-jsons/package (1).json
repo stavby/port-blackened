@@ -1,0 +1,30 @@
+{
+  "name": "@port/server-utils",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint ."
+  },
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@port/logger": "*"
+  },
+  "devDependencies": {
+    "@port/eslint-config": "*",
+    "@port/ts-config": "*",
+    "@port/tsup-config": "*",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.2"
+  }
+}

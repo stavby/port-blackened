@@ -1,0 +1,12 @@
+.tableSivugHatmama .MuiDataGrid-columnHeader:focus,
+.tableSivugHatmama .MuiDataGrid-cell:focus {
+  outline: none !important;
+}
+
+button:focus {
+  outline: none !important;
+}
+
+.MuiDataGrid-cellContent {
+  pointer-events: none;
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@port/keycloak-admin",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint ."
+  },
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "import": "./dist/index.js",
+    "require": "./dist/index.cjs"
+  },
+  "devDependencies": {
+    "@port/ts-config": "*",
+    "@port/tsup-config": "*",
+    "@port/eslint-config": "*",
+    "tsup": "^8.3.6",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "@keycloak/keycloak-admin-client": "^26.3.0",
+    "@port/utils": "*",
+    "@port/common-schemas": "*"
+  }
+}

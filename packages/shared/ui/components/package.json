@@ -1,0 +1,33 @@
+{
+  "name": "@port/components",
+  "version": "1.0.0",
+  "exports": {
+    "./modal": "./src/Modal.tsx",
+    "./autoCompletePermissionTables": "./src/AutoCompletePermissionTables.tsx",
+    "./autoCompleteDomains": "./src/AutoCompleteDomains.tsx",
+    "./StyledSwitch": "./src/StyledSwitch.tsx",
+    "./db-icons": "./src/db-icons/index.ts",
+    "./tree": "./src/Tree/index.ts",
+    "./icons": "./src/icons/index.ts",
+    "./styledTooltip": "./src/StyledTooltip.tsx",
+    "./unitIcons": "./src/UnitIcons.tsx"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@port/eslint-config": "*",
+    "@port/ts-config": "*",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@mui/icons-material": "^5.16.7",
+    "@mui/material": "^5.16.14",
+    "@port/shield-schemas": "*"
+  },
+  "peerDependencies": {
+    "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
+    "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0"
+  }
+}

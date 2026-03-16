@@ -1,0 +1,35 @@
+{
+  "name": "@port/openfga-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint .",
+    "codegen": "dotenv -- openfga-types-gen --config ./openfga-types.config.json"
+  },
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "dependencies": {
+    "@openfga/sdk": "^0.8.0",
+    "lodash": "^4.17.21",
+    "@port/common-schemas": "*"
+  },
+  "devDependencies": {
+    "@port/eslint-config": "*",
+    "@port/ts-config": "*",
+    "@port/tsup-config": "*",
+    "@types/lodash": "^4.17.16",
+    "dotenv-cli": "^7.3.0",
+    "openfga-types-gen": "^1.0.0",
+    "tsup": "^8.3.6"
+  },
+  "author": "",
+  "license": "ISC"
+}

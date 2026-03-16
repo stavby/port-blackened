@@ -1,0 +1,28 @@
+{
+  "name": "@port/opa-requests",
+  "version": "1.0.0",
+  "description": "Contains axios api requests with types to opa",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "private": true,
+  "type": "module",
+  "exports": {
+    "require": "./dist/index.cjs",
+    "import": "./dist/index.js"
+  },
+  "types": "./dist/index.d.ts",
+  "dependencies": {
+    "@port/common-schemas": "*",
+    "@port/shield-schemas": "*",
+    "@port/utils": "*",
+    "@styra/opa": "^1.7.7"
+  },
+  "devDependencies": {
+    "@port/ts-config": "*",
+    "@port/tsup-config": "*",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.3"
+  }
+}

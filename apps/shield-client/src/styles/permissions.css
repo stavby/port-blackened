@@ -1,0 +1,16 @@
+.MuiDataGrid-root .MuiDataGrid-columnHeader:focus,
+.MuiDataGrid-root .MuiDataGrid-cell:focus {
+  outline: none !important;
+}
+
+button:focus {
+  outline: none !important;
+}
+
+.MuiDataGrid-cellContent {
+  pointer-events: none;
+}
+
+.MuiDataGrid-menuList {
+  display: contents;
+}

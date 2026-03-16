@@ -1,0 +1,28 @@
+{
+  "name": "@port/shield-utils",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint ."
+  },
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "import": "./dist/index.js",
+    "require": "./dist/index.cjs"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@port/common-schemas": "*",
+    "@port/shield-schemas": "*"
+  },
+  "devDependencies": {
+    "@port/eslint-config": "*",
+    "@port/ts-config": "*",
+    "@port/tsup-config": "*",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.2"
+  }
+}

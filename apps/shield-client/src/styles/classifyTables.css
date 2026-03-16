@@ -1,0 +1,28 @@
+.tableSivug .MuiDataGrid-columnHeader:focus,
+.tableSivug .MuiDataGrid-cell:focus {
+  outline: none !important;
+}
+
+.MuiDataGrid-menuList {
+  display: contents;
+}
+
+button:focus {
+  outline: none !important;
+}
+
+.MuiDataGrid-cellContent {
+  pointer-events: none;
+}
+
+/* css to max 80 characthers limit */
+
+.MuiDataGrid-cell {
+  max-height: fit-content !important;
+  max-height: inherit;
+  text-align: right;
+  max-width: calc(80ch * 0.5);
+  white-space: initial !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

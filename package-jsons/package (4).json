@@ -1,0 +1,13 @@
+{
+  "name": "@port/tsup-config",
+  "version": "0.0.0",
+  "private": true,
+  "devDependencies": {
+    "tsup": "^8.3.6"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-musl": "^4.39.0"
+  },
+  "exports": "./tsup.config.js",
+  "type": "module"
+}

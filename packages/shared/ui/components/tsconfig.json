@@ -1,0 +1,4 @@
+{
+  "extends": "@port/ts-config/react-library.json",
+  "include": ["src"]
+}
