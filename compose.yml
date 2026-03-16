@@ -12,8 +12,51 @@ services:
     volumes:
       - mongo_data:/data/db
 
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: trino
+      POSTGRES_PASSWORD: trino
+      POSTGRES_DB: datalake
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 512M
+
+  trino:
+    image: trinodb/trino:443
+    container_name: trino
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    volumes:
+      - ./trino-config:/etc/trino/catalog
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 512M
+    environment:
+      - TRINO_JVM_HEAP_SIZE=256M
+    entrypoint: ["/usr/lib/trino/bin/run-trino"]
+
 volumes:
   mongo_data:
+  pg_data:
+  trino_config:
 
 # Mongoose connection string:
 # mongodb://admin:password@localhost:27017/shield?authSource=admin
+  
+# Trino UI: http://localhost:8080
+# PostgreSQL connection for Trino:
+# host=postgres port=5432 user=trino password=trino dbname=datalake
