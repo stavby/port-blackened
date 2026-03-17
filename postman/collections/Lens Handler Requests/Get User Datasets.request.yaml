@@ -1,0 +1,7 @@
+$kind: http-request
+name: Get User Datasets
+url: 'http://localhost:4500/api/catalog/users/:userId/datasets'
+method: GET
+pathVariables:
+  - key: userId
+    value: 'user-123'

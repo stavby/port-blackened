@@ -1,0 +1,13 @@
+{
+  "id": "f0444d7b-e9ce-43a3-aa15-6c4d13bf1456",
+  "version": 1,
+  "name": "Lens Handler API Mock",
+  "protocol": "http",
+  "port": 4500,
+  "mockSrc": "./mock.js",
+  "autoRestartOnChange": true,
+  "logging": {
+    "level": "verbose",
+    "showBody": true
+  }
+}

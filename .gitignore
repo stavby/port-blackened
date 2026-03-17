@@ -38,3 +38,4 @@ all.env
 loadtest-results/
 
 debug.log
+.postman/

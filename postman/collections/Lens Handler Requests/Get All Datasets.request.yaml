@@ -1,0 +1,4 @@
+$kind: http-request
+name: Get All Datasets
+url: 'http://localhost:4500/api/catalog/datasets'
+method: GET

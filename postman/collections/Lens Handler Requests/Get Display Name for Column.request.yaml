@@ -1,0 +1,7 @@
+$kind: http-request
+name: Get Display Name for Column
+url: 'http://localhost:4500/api/catalog/schema/display-names/:columnName'
+method: GET
+pathVariables:
+  - key: columnName
+    value: 'created_at'
