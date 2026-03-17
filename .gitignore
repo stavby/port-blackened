@@ -37,4 +37,6 @@ child_pipeline.yml
 all.env
 loadtest-results/
 
+.postman/
+
 debug.log
