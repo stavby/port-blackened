@@ -27,7 +27,7 @@
     "@port/tsup-config": "*",
     "@types/lodash": "^4.17.16",
     "dotenv-cli": "^7.3.0",
-    "openfga-types-gen": "^1.0.0",
+    "@port/openfga-types-gen": "^1.0.0",
     "tsup": "^8.3.6"
   },
   "author": "",

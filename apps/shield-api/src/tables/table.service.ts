@@ -6,7 +6,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException
+  NotFoundException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { ClassificationStateEvent, UserID } from "@port/common-schemas";
@@ -30,12 +30,12 @@ import {
   Resource,
   SapTables,
   TableFullVerificationDiff,
-  TableVerificationStageDiff
+  TableVerificationStageDiff,
 } from "@port/shield-models";
 import { VerificationStage } from "@port/shield-schemas";
 import { TEST_SCHEMA_NAME, stringify } from "@port/utils";
 import { Collection, Db, ObjectId, WithId } from "mongodb";
-import { AnyBulkWriteOperation, Document, FlattenMaps, Model } from "mongoose";
+import mongoose, { AnyBulkWriteOperation, Document, FlattenMaps, Model } from "mongoose";
 import AuditingService from "src/auditing/auditing.service";
 import { AUDITING_UNKNOWN, InsertTableAudit } from "src/auditing/auditing.types";
 import { LoggedUser } from "src/auth/auth.interface";
@@ -64,7 +64,14 @@ import {
   TablesDictionary,
 } from "./table.classes";
 import { ClassificationState, DEFAULT_MASK, dbTypeMapping } from "./table.constants";
-import { DeprecateTablesDto, GetTableByIdDto, GetTableDto, GetTablesDto, UpsertExternalTablesDto, UpsertTableResponseDto } from "./table.dto";
+import {
+  DeprecateTablesDto,
+  GetTableByIdDto,
+  GetTableDto,
+  GetTablesDto,
+  UpsertExternalTablesDto,
+  UpsertTableResponseDto,
+} from "./table.dto";
 import { UpsertTable, UpsertTableWithOwner } from "./table.interface";
 import { getColumnsDictDiff, getFullVerificationDiff, getTablesDiff, getVerificationDiff, upsertTableToSpyglassEvent } from "./table.utils";
 
@@ -780,9 +787,10 @@ export class TableService {
       currentTablesInMongoMap[this.getFullTableName(schema_name, table_name)] = true;
     });
 
+    // BLACKEND - table name
     const query = `
     SELECT DISTINCT LOWER(dl_schema) AS schema_name, LOWER(dl_table) AS table_name
-    FROM <yanshuf-reducted> 
+    FROM mock_sap_tables 
   `;
     const tablesInTrino = await this.trinoService.query<{ schema_name: string; table_name: string }>(query);
     const tablesInTrinoMap = {};
@@ -1046,7 +1054,7 @@ export class TableService {
 
     // all matching by indexes
     const tablesMetadata: {
-      table: Document<unknown, object, MongooseTable> & MongooseTable;
+      table: Document<mongoose.Types.ObjectId, object, MongooseTable> & MongooseTable;
       prevTable: Document<unknown, object, MongooseTable> & MongooseTable;
       taskOperation: TaskOperationKind | null;
       upsertTableData: UpsertTableWithOwner;
@@ -1126,9 +1134,9 @@ export class TableService {
         ...("co_owners" in extraTableData ? { co_owners: extraTableData.co_owners } : {}),
         ...(extraTableData.application === "remix" || extraTableData.application === "external"
           ? {
-            query: extraTableData.query,
-            updating_dependencies: extraTableData.updating_dependencies,
-          }
+              query: extraTableData.query,
+              updating_dependencies: extraTableData.updating_dependencies,
+            }
           : {}),
         is_deprecated: false,
       } satisfies Partial<MongooseTable>;
@@ -1167,34 +1175,34 @@ export class TableService {
             wasInternal || didChangeDomain
               ? this.createDefaultColumnDict(schema)
               : schema.reduce<MongooseTable["columns_dict"]>(
-                (acc, { column_name, data_type, column_display_name, column_desc, is_key }) => {
-                  const previousColumn = tableRecord.columns_dict.get(column_name);
+                  (acc, { column_name, data_type, column_display_name, column_desc, is_key }) => {
+                    const previousColumn = tableRecord.columns_dict.get(column_name);
 
-                  const baseAttr = {
-                    data_type,
-                    column_display_name,
-                    column_desc,
-                    is_key,
-                  };
+                    const baseAttr = {
+                      data_type,
+                      column_display_name,
+                      column_desc,
+                      is_key,
+                    };
 
-                  if (previousColumn) {
-                    acc.set(column_name, {
-                      column_name: previousColumn.column_name,
-                      attributes: {
-                        ...baseAttr,
-                        classification: previousColumn.attributes.classification,
-                        mask: previousColumn.attributes.mask,
-                      },
-                    });
-                  } else {
-                    didAddColumn = true;
-                    acc.set(column_name, { column_name, attributes: { ...baseAttr, mask: DEFAULT_MASK } });
-                  }
+                    if (previousColumn) {
+                      acc.set(column_name, {
+                        column_name: previousColumn.column_name,
+                        attributes: {
+                          ...baseAttr,
+                          classification: previousColumn.attributes.classification,
+                          mask: previousColumn.attributes.mask,
+                        },
+                      });
+                    } else {
+                      didAddColumn = true;
+                      acc.set(column_name, { column_name, attributes: { ...baseAttr, mask: DEFAULT_MASK } });
+                    }
 
-                  return acc;
-                },
-                new Map(),
-              );
+                    return acc;
+                  },
+                  new Map(),
+                );
           const classificationState = this.calcColumnsDictClassificationState(Object.fromEntries(nextColumnDict.entries()));
 
           tableRecord.set("columns_dict", nextColumnDict);
@@ -1209,7 +1217,7 @@ export class TableService {
     }
 
     const tableResults = await this.tableModel.bulkSave(tablesMetadata.map(({ table }) => table));
-    const tasksToWrite: AnyBulkWriteOperation<Document<unknown, object, MongooseTask>>[] = [];
+    const tasksToWrite: AnyBulkWriteOperation<Document<mongoose.Types.ObjectId, object, MongooseTask>>[] = [];
 
     const insertAuditData = tablesMetadata.reduce<InsertTableAudit[]>((acc, { table, prevTable }, index) => {
       const tableDiff = getTablesDiff({ currTable: prevTable, newTable: table });

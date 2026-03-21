@@ -1,0 +1,9 @@
+$kind: http-request
+name: Get Dataset by Schema and Table
+url: 'http://localhost:4500/api/catalog/datasets/:tableSchema/:tableName'
+method: GET
+pathVariables:
+  - key: tableSchema
+    value: 'public'
+  - key: tableName
+    value: 'users'

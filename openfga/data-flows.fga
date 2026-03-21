@@ -1,0 +1,51 @@
+module data-flows
+
+type connection
+  relations
+    define platform: [platform]
+
+    define role_viewer: [user]
+    define role_user: [user]
+    define role_developer: [user]
+    define role_maintainer: [user]
+    define role_documentator: [user]
+
+    define can_view: role_viewer or role_user or role_developer or role_maintainer or role_documentator
+
+    define can_update: role_maintainer
+
+    define can_create_flows: role_user or role_developer or role_maintainer
+
+type flow
+  relations
+    define connection: [connection]
+    define domain: [domain]
+
+    define owner: [user]
+
+    define can_change_owner: owner or admin from domain
+
+    define can_delete: (owner or role_maintainer from connection) and can_update_datalake from domain
+
+    define can_update: (owner or role_developer from connection) or (can_delete and can_update_datalake from domain)
+
+    define can_document: (owner or role_documentator from connection or role_developer from connection or role_maintainer from connection) and can_document from domain
+
+    define can_view: owner or role_viewer from connection or role_user from connection or role_documentator from connection or role_developer from connection or role_maintainer from connection
+
+type mix
+  relations
+    define domain: [domain]
+
+    define owner: [user]
+    define co_owner: [user]
+
+    define can_change_owner: owner or admin from domain
+    define can_delete_co_owner: owner or admin from domain
+    define can_add_co_owner: owner or co_owner or admin from domain
+
+    define can_update: (admin from domain or owner or co_owner) and can_update_datalake from domain
+
+    define can_document: owner or co_owner or documentator from domain or amlach from domain or rav_amlach from domain
+
+    define can_refresh: can_update

@@ -23,7 +23,9 @@ export class ContactUsService {
     this.jira_api = axios.create({
       baseURL: this.jira_url,
       auth: { username: this.jira_user, password: this.jira_pass },
-      httpsAgent: new Agent({ rejectUnauthorized: true, ca: [readServerFile("")] }),
+      // httpsAgent: new Agent({ rejectUnauthorized: true, ca: [readServerFile("")] }),
+      // BLACKEND
+      httpsAgent: new Agent({ rejectUnauthorized: false }),
     });
 
     this.jira_api.interceptors.response.use(

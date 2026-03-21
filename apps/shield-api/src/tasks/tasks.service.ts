@@ -4,7 +4,7 @@ import { FGADomainRelationConstants, formatFGAObjectId } from "@port/openfga-cli
 import { Task as MongooseTask, OP, Resource } from "@port/shield-models";
 import { stringify } from "@port/utils";
 import { Collection, Db, ObjectId } from "mongodb";
-import { AnyBulkWriteOperation, Document, Model } from "mongoose";
+import mongoose, { AnyBulkWriteOperation, Document, Model } from "mongoose";
 import AuditingService from "src/auditing/auditing.service";
 import { AUDITING_UNKNOWN } from "src/auditing/auditing.types";
 import { LoggedUser } from "src/auth/auth.interface";
@@ -150,7 +150,7 @@ export class TasksService {
     }
   }
 
-  getTaskDbOperation(taskAction: TaskAction): AnyBulkWriteOperation<Document<unknown, object, MongooseTask>> {
+  getTaskDbOperation(taskAction: TaskAction): AnyBulkWriteOperation<Document<mongoose.Types.ObjectId, object, MongooseTask>> {
     switch (taskAction.kind) {
       case "update-by-table": {
         const { tableId } = taskAction;

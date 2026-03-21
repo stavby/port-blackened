@@ -1,0 +1,45 @@
+module shield
+
+extend type domain
+  relations
+    define can_manage_data_permissions: admin or amlach or rav_amlach or support_center or api_user
+    define can_classify_tables: admin or amlach or rav_amlach
+    define can_add_classifications: admin
+
+    define can_manage_user_mask_indications: admin or can_manage_data_permissions
+    define can_manage_user_deceased_indications: admin or rav_amlach
+
+    define has_any_data_permissions: can_manage_data_permissions or can_classify_tables or can_add_classifications or can_manage_user_mask_indications or can_manage_user_deceased_indications
+
+    define can_create_permission_group: admin or amlach or rav_amlach or support_center
+
+type domain_classification
+  relations
+    define domain: [domain]
+    define assigners: [user]
+
+    define can_assign_to_table: (assigners and can_classify_tables from domain) or admin from domain
+
+    define can_assign_to_user: (assigners and can_manage_data_permissions from domain) or admin from domain
+
+    define can_manage_assigners: (assigners and (can_manage_amlachs from domain or can_manage_api_users from domain or can_manage_rav_amlachs from domain or can_manage_support_centers from domain)) or admin from domain
+
+type schema
+  relations
+    define platform: [platform]
+    define can_write: [user] or admin from platform
+
+type permission_group
+  relations
+    define platform: [platform]
+
+    define owner: [user]
+    define co_owner: [user]
+
+    define can_change_owner: owner or admin from platform
+    define can_delete_co_owner: owner or admin from platform
+    define can_add_co_owner: owner or co_owner or admin from platform
+
+    define can_update_details: owner or co_owner or admin from platform
+    define can_delete_permission_group: owner or admin from platform
+    define can_change_users: owner or co_owner or admin from platform

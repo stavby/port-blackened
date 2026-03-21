@@ -18,7 +18,9 @@ export class LensHandlerApi {
   constructor() {
     this.lensHandler = axios.create({
       baseURL: process.env.LENS_HANDLER_URL,
-      httpsAgent: new Agent({ rejectUnauthorized: true, ca: [readServerFile("")] }),
+      // httpsAgent: new Agent({ rejectUnauthorized: true, ca: [readServerFile("")] }),
+      // BLACKEND
+      httpsAgent: new Agent({ rejectUnauthorized: false }),
     });
 
     this.lensHandler.interceptors.response.use(

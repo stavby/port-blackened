@@ -2473,9 +2473,10 @@ export class UserService {
       currentUsersInMongoMap[user_id] = true;
     });
 
+    // BLACKEND - table name
     const query = `
     SELECT DISTINCT LOWER(user_id) AS user_id
-    FROM <redacted> 
+    FROM mock_sap_users
   `;
     const usersInTrino = await this.trinoService.query<{ user_id: string }>(query);
     const usersInTrinoMap = {};
