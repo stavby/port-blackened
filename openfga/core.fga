@@ -1,0 +1,42 @@
+module core
+
+type user
+
+type platform
+  relations
+    define admin: [user]
+
+    define can_create_domains: admin
+    define can_manage_unique_population_indications: [user] or admin
+    define can_create_classifications: admin
+    define can_create_connections: [user] or admin
+    define can_manage_admins: admin
+    define can_delete_application_users: admin
+    define can_manage_create_connections: admin
+    define can_manage_unique_population_assigners: admin
+
+type domain
+  relations
+    define platform: [platform]
+    define admin: admin from platform
+
+    define rav_amlach: [user]
+    define amlach: [user]
+    define kapat: [user]
+    define implementor: [user]
+    define analyst: [user]
+    define documentator: [user]
+    define support_center: [user]
+    define api_user: [user]
+
+    define can_update_datalake: admin or analyst or implementor or kapat
+    define can_document: can_update_datalake or documentator
+
+    define can_manage_documentators: admin or rav_amlach or amlach
+    define can_manage_analysts: admin or rav_amlach or amlach
+    define can_manage_implementors: admin or kapat
+    define can_manage_kapats: admin
+    define can_manage_amlachs: admin or rav_amlach
+    define can_manage_rav_amlachs: admin
+    define can_manage_support_centers: admin or rav_amlach or amlach
+    define can_manage_api_users: admin or rav_amlach or amlach

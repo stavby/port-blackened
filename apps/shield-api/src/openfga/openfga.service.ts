@@ -6,6 +6,7 @@ import OpenFgaPortClient, {
   PLATFORM_FGA_INSTANCE,
   formatFGAObjectId,
   parseFGAObjectId,
+  ListObjectsResponse
 } from "@port/openfga-client";
 import { ObjectId, WithId } from "mongodb";
 import { Domain } from "src/domains/domains.dto";
@@ -102,8 +103,8 @@ export class OpenFgaService extends OpenFgaPortClient {
     ];
   }
 
-  async canManageRoleOnAnyDomain(loggedUserId: UserID, relation: ManageShieldRoles) {
-    return await this.listObjects({
+  async canManageRoleOnAnyDomain(loggedUserId: UserID, relation: ManageShieldRoles): Promise<ListObjectsResponse> {
+   return await this.listObjects({
       user: formatFGAObjectId({ type: "user", id: loggedUserId }),
       relation: relation,
       type: "domain",

@@ -1,0 +1,114 @@
+{
+  "realm": "port-dev",
+  "enabled": true,
+  "displayName": "Port Dev Realm",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "rememberMe": true,
+  "clients": [
+    {
+      "clientId": "shield-client",
+      "name": "Shield Client",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "crazy-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "redirectUris": [
+        "http://localhost:8080/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8080"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "alice",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Alice",
+      "lastName": "Carter",
+      "email": "alice@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Passw0rd!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "bob",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Bob",
+      "lastName": "Nguyen",
+      "email": "bob@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Passw0rd!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "carla",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Carla",
+      "lastName": "Mendez",
+      "email": "carla@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Passw0rd!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "david",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "David",
+      "lastName": "Khan",
+      "email": "david@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Passw0rd!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "emma",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Emma",
+      "lastName": "Rossi",
+      "email": "emma@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Passw0rd!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "service-account-shield-client",
+      "enabled": true,
+      "serviceAccountClientId": "shield-client",
+      "clientRoles": {
+        "realm-management": ["realm-admin"]
+      }
+    }
+  ]
+}

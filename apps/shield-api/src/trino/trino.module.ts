@@ -16,8 +16,11 @@ import { readServerFile } from "@port/server-files";
           source: "shield",
           catalog: configService.get<string>("trino.catalog"),
           schema: configService.get<string>("trino.schema"),
-          auth: new BasicAuth(configService.get<string>("trino.user"), configService.get<string>("trino.password")),
-          ssl: { rejectUnauthorized: true, ca: [readServerFile("")] },
+          // BLACKEND
+          // auth: new BasicAuth(configService.get<string>("trino.user"), configService.get<string>("trino.password")),
+          // ssl: { rejectUnauthorized: true, ca: [readServerFile("")] },
+          auth: new BasicAuth(configService.get<string>("trino.user")),
+          ssl: { rejectUnauthorized: false },
         });
         Logger.log("Connecting to Trino...");
         return trino;
