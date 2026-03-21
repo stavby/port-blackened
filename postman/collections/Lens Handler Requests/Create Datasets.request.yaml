@@ -1,0 +1,16 @@
+$kind: http-request
+name: Create Datasets
+url: 'http://localhost:4500/api/catalog/datasets'
+method: POST
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "tables": [
+        { "tableSchema": "public", "tableName": "users" },
+        { "tableSchema": "analytics", "tableName": "events" }
+      ]
+    }

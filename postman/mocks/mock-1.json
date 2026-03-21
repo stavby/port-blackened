@@ -1,0 +1,13 @@
+{
+  "id": "906d12d1-2c68-4bc3-b75b-b6ca32ac171e",
+  "version": 1,
+  "name": "OPA API Mock",
+  "protocol": "http",
+  "port": 4501,
+  "mockSrc": "./mock-1.js",
+  "autoRestartOnChange": true,
+  "logging": {
+    "level": "verbose",
+    "showBody": true
+  }
+}

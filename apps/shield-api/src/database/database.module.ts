@@ -13,8 +13,9 @@ import { DB_CONNECTION_PROVIDER } from "src/utils/constants";
 
           const connectionString = configService.get<string>("mongodb.connectionString");
           const client = await MongoClient.connect(connectionString);
-
-          return client.db("shield-db");
+          // BLACKEND
+          // return client.db("shield-db");
+          return client.db("shield");
         } catch (e) {
           throw new HttpException(`MongoDB connection error`, HttpStatus.INTERNAL_SERVER_ERROR, { cause: e });
         }

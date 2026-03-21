@@ -10,7 +10,7 @@ import {
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { UserID } from "@port/common-schemas";
-import { FGADomainRelationConstants, FGADomainRelations, formatFGAObjectId } from "@port/openfga-client";
+import { FGADomainRelationConstants, FGADomainRelations, formatFGAObjectId, ListUsersResponse } from "@port/openfga-client";
 import { Domain as MongooseDomain, ApplicationUser as MongooseApplicationUser, OP, Resource } from "@port/shield-models";
 import { stringify } from "@port/utils";
 import { Db, ObjectId, WithId } from "mongodb";
@@ -140,7 +140,7 @@ export class DomainsService {
       .toArray();
   }
 
-  async getUsersWithRelationOnDomain(domainId: string, relation: FGADomainRelations) {
+  async getUsersWithRelationOnDomain(domainId: string, relation: FGADomainRelations): Promise<ListUsersResponse> {
     return await this.openFgaService.listUsers({
       user_filters: [{ type: "user" }],
       relation,

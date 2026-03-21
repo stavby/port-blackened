@@ -19,35 +19,97 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: trino
-      POSTGRES_PASSWORD: trino
-      POSTGRES_DB: datalake
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
     volumes:
       - pg_data:/var/lib/postgresql/data
+      - ./postgres/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 512M
 
   trino:
-    image: trinodb/trino:443
+    image: trinodb/trino:latest
     container_name: trino
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8090:8080"
     depends_on:
       - postgres
     volumes:
-      - ./trino-config:/etc/trino/catalog
+      - ./trino-config/catalog:/etc/trino/catalog:ro
+      - ./trino-config/config.properties:/etc/trino/config.properties:ro
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 512M
     environment:
       - TRINO_JVM_HEAP_SIZE=256M
-    entrypoint: ["/usr/lib/trino/bin/run-trino"]
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.3
+    container_name: keycloak
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=${KEYCLOAK_ADMIN_USERNAME:-admin}
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
+      - KC_DB_USERNAME=keycloak_user
+      - KC_DB_PASSWORD=keycloak_pass
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command:
+      - start-dev
+      - --import-realm
+    volumes:
+      - ./keycloak/realm-import/port-dev-realm.json:/opt/keycloak/data/import/realm-import.json:ro
+
+  openfga-migrate:
+    image: openfga/openfga:v1.8.4
+    container_name: openfga-migrate
+    restart: "no"
+    command: migrate
+    environment:
+      - OPENFGA_DATASTORE_ENGINE=postgres
+      - OPENFGA_DATASTORE_URI=postgres://openfga_user:openfga_pass@postgres:5432/openfga?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  openfga:
+    image: openfga/openfga:v1.8.4
+    container_name: openfga
+    restart: unless-stopped
+    command: run
+    ports:
+      - "8082:8080"
+      - "8083:8081"
+      - "3001:3000"
+    environment:
+      - OPENFGA_DATASTORE_ENGINE=postgres
+      - OPENFGA_DATASTORE_URI=postgres://openfga_user:openfga_pass@postgres:5432/openfga?sslmode=disable
+      - OPENFGA_AUTHN_METHOD=none
+      - OPENFGA_PLAYGROUND_ENABLED=true
+    depends_on:
+      openfga-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:8081"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   mongo_data:
@@ -56,7 +118,20 @@ volumes:
 
 # Mongoose connection string:
 # mongodb://admin:password@localhost:27017/shield?authSource=admin
-  
-# Trino UI: http://localhost:8080
+
+# Trino UI: https://localhost:8090
 # PostgreSQL connection for Trino:
 # host=postgres port=5432 user=trino password=trino dbname=datalake
+# PostgreSQL connection for OpenFGA:
+# host=postgres port=5432 user=openfga_user password=openfga_pass dbname=openfga
+# PostgreSQL connection for Keycloak:
+# host=postgres port=5432 user=keycloak_user password=keycloak_pass dbname=keycloak
+# Future app DB can be added in ./postgres/initdb/01-create-databases.sql
+# Keycloak URL: http://localhost:8081
+# Keycloak admin: admin / admin
+# Imported realm: port-dev
+# Imported client: shield-client
+# Demo users: alice, bob, carla, david, emma (password: Passw0rd!)
+# OpenFGA HTTP API: http://localhost:8082
+# OpenFGA gRPC API: localhost:8083
+# OpenFGA Playground: http://localhost:3001/playground

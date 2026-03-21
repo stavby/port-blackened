@@ -109,9 +109,10 @@ export class UserInfoService {
       return acc;
     }, []);
 
+    // BLACKEND - table name
     const query = `
       SELECT ${columns.join(",")}
-      FROM <redacted>
+      FROM datalake.public.mock_users
       WHERE mispar_ishi IN (${userIdsWithoutPrefix.join(",")})
     `;
 
@@ -136,7 +137,7 @@ export class UserInfoService {
    */
   async getFullUserInfoByUserId(user_id: UserID, useCache: boolean): Promise<GetFullUserInfoDto> {
     const keycloakUserData = await this.getKeycloakUserByUserId(user_id, useCache);
-
+    console.log(keycloakUserData)
     const userInfoAd = {
       user_id: keycloakUserData.userId,
       first_name: keycloakUserData.firstName,

@@ -1,0 +1,11 @@
+$kind: http-request
+name: Get Display Names for Columns
+url: 'http://localhost:4500/api/catalog/schema/display-names'
+method: POST
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    ["user_id", "created_at", "order_total"]

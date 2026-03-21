@@ -1,0 +1,9 @@
+$kind: http-request
+name: Get Lineage
+url: 'http://localhost:4500/api/catalog/lineage/:tableSchema/:tableName'
+method: GET
+pathVariables:
+  - key: tableSchema
+    value: 'public'
+  - key: tableName
+    value: 'users'

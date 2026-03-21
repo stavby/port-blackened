@@ -31,7 +31,7 @@ import {
 } from "@port/shield-schemas";
 import { chunk } from "lodash";
 import { ObjectId, WithId } from "mongodb";
-import { Document, Model, PipelineStage } from "mongoose";
+import { HydratedDocument, Model, PipelineStage } from "mongoose";
 import AuditingService from "src/auditing/auditing.service";
 import { LoggedUser } from "src/auth/auth.interface";
 import { DomainsService } from "src/domains/domains.service";
@@ -534,7 +534,7 @@ export class ApplicationUsersService {
       );
     }
 
-    const usersRecordByUserId: Record<string, Document<unknown, unknown, MongooseApplicationUser> & MongooseApplicationUser> = {};
+    const usersRecordByUserId: Record<string, HydratedDocument<MongooseApplicationUser>> = {};
 
     userIds.forEach((userId) => {
       const isAdmin = adminsSet.has(userId);

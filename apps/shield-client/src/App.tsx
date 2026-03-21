@@ -22,7 +22,8 @@ function App() {
       <ReactQueryDevtools buttonPosition="bottom-left" />
       <LoadingProvider>
         <ModalProvider>
-          <ContactModal />
+          {/* BLACKEND */}
+          {/* <ContactModal /> */}
           <BackgroundWrapper>
             <Snackbar open={open} onClose={closeSnackbar} autoHideDuration={3000} anchorOrigin={{ vertical: "top", horizontal: "center" }}>
               <Alert severity={severity} variant="filled" sx={{ width: "100%" }}>
