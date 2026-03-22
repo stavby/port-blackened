@@ -2,6 +2,10 @@ interface MongodbConfigProps {
   connectionString: string;
 }
 
+interface PostgresConfigProps {
+  connectionString: string;
+}
+
 interface TrinoConfigProps {
   server: string;
   catalog?: string;
@@ -32,6 +36,7 @@ export interface ConfigProps {
   env: string;
   clientHost: string;
   mongodb: MongodbConfigProps;
+  postgres: PostgresConfigProps;
   trino: TrinoConfigProps;
   keycloak: KeycloakProps;
   externalApi: ExternalApiProps;

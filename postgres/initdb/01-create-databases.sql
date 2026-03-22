@@ -11,12 +11,17 @@ BEGIN
 	IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'trino') THEN
 		CREATE ROLE trino LOGIN PASSWORD 'trino';
 	END IF;
+
+	IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'shield_user') THEN
+		CREATE ROLE shield_user LOGIN PASSWORD 'shield_pass';
+	END IF;
 END
 $$;
 
 CREATE DATABASE datalake OWNER trino;
 CREATE DATABASE openfga OWNER openfga_user;
 CREATE DATABASE keycloak OWNER keycloak_user;
+CREATE DATABASE shield OWNER shield_user;
 
 \connect datalake
 GRANT ALL PRIVILEGES ON DATABASE datalake TO trino;
