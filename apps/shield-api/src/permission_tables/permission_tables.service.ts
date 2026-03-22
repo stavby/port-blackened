@@ -61,12 +61,12 @@ export class PermissionTablesService {
 
     const dataTree: RowFilterTreeValueDto[] = [];
 
-    data.forEach((value) => {
+    for (const value of data) {
       const hashTableValue = hashTable[value.value];
 
       if (!hashTableValue) {
         this.logger.error(`Value with id ${value.value} not found in hashTable`);
-        return [];
+        continue;
       }
 
       if (value.parent) {
@@ -74,13 +74,13 @@ export class PermissionTablesService {
 
         if (!hashTableParent) {
           this.logger.error(`Parent with id ${value.parent} not found for value with id ${value.value}`);
-          return [];
+          continue;
         }
         hashTableParent.children.push(hashTableValue);
       } else {
         dataTree.push(hashTableValue);
       }
-    });
+    }
 
     return dataTree;
   }

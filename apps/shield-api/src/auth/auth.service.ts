@@ -33,7 +33,7 @@ export class AuthService {
     const { access_token, expires_in } = await this.oidcClient.callback(keycloakRedirectUri, params, { state: params.state });
 
     const redirectTo = params.state;
-    const clientHost = this.configService.get("clientHost", { infer: true });
+    const clientHost = this.configService.get("clientHost", { infer: true })!;
     const redirectUrl = redirectTo ? `${clientHost}/${redirectTo}` : clientHost;
 
     return { access_token, expires_in, redirectUrl };

@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, Logger, Post, Query, Redirect, Req, Res, UseGuards } from "@nestjs/common";
+import { Controller, Get, Inject, InternalServerErrorException, Logger, Post, Query, Redirect, Req, Res, UseGuards } from "@nestjs/common";
 import { Request, Response } from "express";
 import { Grant } from "keycloak-connect";
 import { AuthenticatedUser, Public as OIDCPublic } from "nest-keycloak-connect";
@@ -10,8 +10,10 @@ import { DirectAccessGrantGuard } from "./keycloak/directAccessGrant.guard";
 import { OIDC_CLIENT_PROVIDER } from "./oidcClient.provider";
 import { ApplicationUsersService } from "src/application_users/application_users.service";
 import { ZGetLoggedUserInfoDto, ZGetLoggedUserPermissionsDisplayDto } from "src/application_users/application_users.classes";
+import { ApiTags } from "@nestjs/swagger";
 
 @Controller()
+@ApiTags("Authentication")
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
@@ -36,11 +38,11 @@ export class AuthController {
   @UseGuards(new DirectAccessGrantGuard())
   @Post("auth/login/direct")
   async directAccessGrant(@AuthenticatedUser() grant: Grant) {
-    // neccesary usage of any cast due to incorrect types in keycloak-connect package
+    // necessary usage of any cast due to incorrect types in keycloak-connect package
     const token = (grant?.access_token as any)?.["token"];
 
     if (!token) {
-      throw new Error("Failed to obtain access token using direct access grant");
+      throw new InternalServerErrorException("Failed to obtain access token using direct access grant");
     }
 
     return token;
@@ -56,11 +58,7 @@ export class AuthController {
       httpOnly: true,
     });
 
-    if (redirectUrl) {
-      res.redirect(redirectUrl);
-    } else {
-      this.logger.warn("No redirect URL found in login callback");
-    }
+    res.redirect(redirectUrl);
   }
 
   @Get("userInfo")
