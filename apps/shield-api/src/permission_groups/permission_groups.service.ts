@@ -112,7 +112,7 @@ export class PermissionGroupsService {
   async getPermissionGroupById(permissionGroupId: ObjectId): Promise<WithId<MongoosePermissionGroup> | null> {
     const permissionGroup = await this.permissionGroupModel.findById(permissionGroupId);
 
-    return permissionGroup.toObject();
+    return permissionGroup?.toObject() || null;
   }
 
   async getPermissionGroupsByIds(permissionGroupIds: ObjectId[]): Promise<WithId<MongoosePermissionGroup>[]> {
@@ -144,7 +144,7 @@ export class PermissionGroupsService {
       return await withRollbacks(async (registerRollback) => {
         const insertedObject = await this.permissionGroupModel.create({
           name: permission_group.name,
-          description: permission_group.description,
+          description: permission_group.description ?? "",
           ownerId: loggedUser.userId,
           ownerName: loggedUser.displayName,
           coOwners: [],
@@ -311,6 +311,11 @@ export class PermissionGroupsService {
     }
 
     const oldGroup = await this.getPermissionGroupById(id);
+
+    if (!oldGroup) {
+      throw new NotFoundException(`Permission group with id ${id} not found`);
+    }
+
     const usersToUpdate = await this.userModel.find({
       permission_groups: { $elemMatch: { id } },
     });
@@ -325,7 +330,7 @@ export class PermissionGroupsService {
       const deletedPermissionGroup = await this.permissionGroupModel.deleteOne({ _id: id });
 
       if (deletedPermissionGroup.deletedCount === 0) {
-        throw new HttpException("קבוצת ההרשאה לא קיימת", HttpStatus.NOT_FOUND);
+        throw new NotFoundException(`Permission group with id ${id} not found`);
       }
 
       registerRollback(() => this.permissionGroupModel.create(oldGroup), "Mongo permission group deletePermissionGroupById");
@@ -363,7 +368,7 @@ export class PermissionGroupsService {
     this.userService.invalidateUsersDictCache();
   }
 
-  async getPermissionGroupsExcel(loggedUser): Promise<unknown> {
+  async getPermissionGroupsExcel(loggedUser: LoggedUser): Promise<unknown> {
     const permissionGroups = await this.getPermissionGroups(loggedUser);
 
     const permissionGroupsExcelFile = this.excelService.convertToExcel(permissionGroups, [
@@ -552,6 +557,12 @@ export class PermissionGroupsService {
     const usersDto = users.map<GetUsersByPermissionGroup>((user) => {
       const permission_group = user.permission_groups.find(({ id }) => id.equals(permissionGroup));
 
+      if (!permission_group) {
+        throw new InternalServerErrorException(
+          `Permission group with id ${permissionGroup} not found in user ${user.user_id} permission groups`,
+        );
+      }
+
       return {
         _id: user._id,
         user_id: user.user_id,
@@ -587,7 +598,7 @@ export class PermissionGroupsService {
     const response = await this.openFgaService.batchCheck(request);
     return response.result.reduce(
       (acc, cur) => {
-        const relName = cur.request.relation as FGAPermission_groupRelations;
+        const relName = cur.request.relation as (typeof relations)[number];
         acc[relName] = cur.allowed ?? false;
         return acc;
       },

@@ -44,6 +44,11 @@ export class AdminService {
     if (!isSchemaExistsInOpenFGA.allowed) throw new BadRequestException(`Schema ${schema_name} does not exist in OpenFGA`);
 
     const userDatalakeCatalog = user.catalogs.get(DATALAKE_CATALOG_NAME);
+
+    if (!userDatalakeCatalog) {
+      throw new BadRequestException(`User ${user_id} does not have access to datalake catalog`);
+    }
+
     const rollbackSchemas = userDatalakeCatalog.schemas?.length ? cloneDeep(userDatalakeCatalog.schemas) : undefined;
     const existingSchemaValue = userDatalakeCatalog.schemas?.find((schema) => schema.schema_name === schema_name);
     if (existingSchemaValue?.write) {
@@ -81,6 +86,10 @@ export class AdminService {
     if (!user) throw new BadRequestException(`User ${user_id} not found in collection`);
 
     const userDatalakeCatalog = user.catalogs.get(DATALAKE_CATALOG_NAME);
+
+    if (!userDatalakeCatalog) {
+      throw new BadRequestException(`User ${user_id} does not have access to datalake catalog`);
+    }
     const existingSchemaValue = userDatalakeCatalog.schemas?.find((schema) => schema.schema_name === schema_name);
 
     const rollbackSchemas = userDatalakeCatalog.schemas?.length ? cloneDeep(userDatalakeCatalog.schemas) : undefined;

@@ -8,7 +8,7 @@ export const OPA_PROVIDE = "OPA_PROVIDE";
 export const opaProvider = {
   provide: OPA_PROVIDE,
   useFactory: (configService: ConfigService<ConfigProps>): OpaApi => {
-    const url = configService.get("opa.url", { infer: true });
+    const url = configService.get("opa.url", { infer: true })!;
     return new OpaApi(url);
   },
   inject: [ConfigService],

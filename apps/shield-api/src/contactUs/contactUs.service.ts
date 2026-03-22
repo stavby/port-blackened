@@ -95,20 +95,21 @@ export class ContactUsService {
       });
 
       const request_types: RequestType[] = await Promise.all(
-        res.data?.values.map(async (request_type): Promise<RequestType> => {
+        res.data?.values.map(async (request_type: any): Promise<RequestType> => {
           const fieldsRes = await this.jira_api.get(
             `rest/servicedeskapi/servicedesk/${this.jira_desk}/requesttype/${request_type.id}/field`,
           );
           return {
             id: request_type.id,
             name: request_type.name,
-            fields: (fieldsRes.data?.requestTypeFields as any[] | undefined)?.map<RequestType["fields"][number]>((field) => ({
-              fieldId: field.fieldId,
-              name: field.name,
-              type: field.jiraSchema?.type,
-              required: field.required,
-              validValues: field.validValues,
-            })),
+            fields:
+              (fieldsRes.data?.requestTypeFields as any[] | undefined)?.map<RequestType["fields"][number]>((field: any) => ({
+                fieldId: field.fieldId,
+                name: field.name,
+                type: field.jiraSchema?.type,
+                required: field.required,
+                validValues: field.validValues,
+              })) ?? [],
           };
         }),
       );

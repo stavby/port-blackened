@@ -23,7 +23,7 @@ export const permissionGroupSchema = z
     description: z.string().optional(),
     ownerId: userIdSchema,
     ownerName: z.string(),
-    coOwners: z.array(CoOwnerSchema).optional(),
+    coOwners: z.array(CoOwnerSchema),
     color: z.string(),
     attributes: baseUserSchema.shape.attributes.pick(permissionGroupsAttributesPick),
   })

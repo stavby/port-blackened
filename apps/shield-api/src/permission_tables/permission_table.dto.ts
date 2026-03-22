@@ -8,7 +8,7 @@ export class GetRowFilterValuesQueryParams {
   @IsBoolean()
   @ApiProperty({ type: Boolean, default: false, required: false })
   @Transform(({ value }) => (value === "true" ? true : false))
-  unflatten? = false;
+  unflatten = false;
 }
 
 export class RowFilterFlatTreeValueDto extends UserRowFilterValue {

@@ -85,9 +85,10 @@ export class DomainsService {
       ])
       .toArray();
 
-    if (domains.length < 1) throw new NotFoundException("No domains found");
+    const domainsDict = domains[0] as unknown as DomainsDictionary;
+    if (!domainsDict) throw new NotFoundException("No domains found");
 
-    return domains[0];
+    return domainsDict;
   }
 
   async getAllDomains(): Promise<WithId<Domain>[]> {
@@ -174,8 +175,14 @@ export class DomainsService {
     return await this.db.collection<Domain>("domains").findOne({ name });
   }
 
-  async getDomainById(_id: ObjectId): Promise<WithId<Domain> | null> {
-    return await this.db.collection<Domain>("domains").findOne({ _id });
+  async getDomainById(_id: ObjectId): Promise<WithId<Domain>> {
+    const domain = await this.db.collection<Domain>("domains").findOne({ _id });
+
+    if (!domain) {
+      throw new HttpException(`העולם תוכן לא נמצא`, HttpStatus.NOT_FOUND);
+    }
+
+    return domain;
   }
 
   /**
@@ -252,13 +259,7 @@ export class DomainsService {
   async editDomainById(id: ObjectId, domain: EditDomainDto, userId: UserID) {
     try {
       const existingDomain = await this.getDomainById(id);
-
-      if (!existingDomain) {
-        throw new HttpException(`העולם תוכן לא נמצא`, HttpStatus.NOT_FOUND);
-      }
-
       const classificationSet = new Set(existingDomain.classifications.map((id) => id.toString()));
-
       const updatedClassifcationSet = new Set(domain.classifications.map((id) => id.toString()));
 
       classificationSet.forEach((id) => {
@@ -396,7 +397,15 @@ export class DomainsService {
       }),
     ]);
 
-    const adminsSet = new Set(admins.users.map((user) => user.object.id));
+    const adminsSet = new Set(
+      admins.users.reduce<string[]>((acc, user) => {
+        if (user.object?.id) {
+          acc.push(user.object.id);
+        }
+
+        return acc;
+      }, []),
+    );
 
     const domainsWithAdmins = await Promise.all(
       domains.map(async (domain) => {
@@ -406,9 +415,9 @@ export class DomainsService {
         );
 
         const usersFullNames = users.reduce<string[]>((acc, user) => {
-          const userId = user.object.id;
+          const userId = user.object?.id;
 
-          if (!adminsSet.has(userId)) {
+          if (userId && !adminsSet.has(userId)) {
             acc.push(usersNamesMap.get(userId) ?? userId);
           }
 

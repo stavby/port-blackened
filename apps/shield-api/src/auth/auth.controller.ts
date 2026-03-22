@@ -1,9 +1,8 @@
-import { Controller, Get, Inject, Post, Query, Redirect, Req, Res, UseGuards } from "@nestjs/common";
+import { Controller, Get, Inject, Logger, Post, Query, Redirect, Req, Res, UseGuards } from "@nestjs/common";
 import { Request, Response } from "express";
 import { Grant } from "keycloak-connect";
 import { AuthenticatedUser, Public as OIDCPublic } from "nest-keycloak-connect";
 import { BaseClient } from "openid-client";
-import { RolesService } from "src/roles/roles.service";
 import { COOKIE_KEY, DEFAULT_JWT_EXPIRES_IN_MS } from "src/utils/constants";
 import { LoggedUser } from "./auth.interface";
 import { AuthService } from "./auth.service";
@@ -14,11 +13,12 @@ import { ZGetLoggedUserInfoDto, ZGetLoggedUserPermissionsDisplayDto } from "src/
 
 @Controller()
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     @Inject(OIDC_CLIENT_PROVIDER) private readonly oidcClient: BaseClient,
     private readonly authService: AuthService,
     private readonly applicationUsersService: ApplicationUsersService,
-    private readonly rolesService: RolesService,
   ) {}
 
   @OIDCPublic()
@@ -36,7 +36,14 @@ export class AuthController {
   @UseGuards(new DirectAccessGrantGuard())
   @Post("auth/login/direct")
   async directAccessGrant(@AuthenticatedUser() grant: Grant) {
-    return grant.access_token["token"];
+    // neccesary usage of any cast due to incorrect types in keycloak-connect package
+    const token = (grant?.access_token as any)?.["token"];
+
+    if (!token) {
+      throw new Error("Failed to obtain access token using direct access grant");
+    }
+
+    return token;
   }
 
   @OIDCPublic()
@@ -45,11 +52,15 @@ export class AuthController {
     const { access_token, expires_in, redirectUrl } = await this.authService.handleLoginCallback(req);
 
     res.cookie(COOKIE_KEY, access_token, {
-      maxAge: (expires_in - 10) * 1000 || DEFAULT_JWT_EXPIRES_IN_MS,
+      maxAge: expires_in ? (expires_in - 10) * 1000 : DEFAULT_JWT_EXPIRES_IN_MS,
       httpOnly: true,
     });
 
-    res.redirect(redirectUrl);
+    if (redirectUrl) {
+      res.redirect(redirectUrl);
+    } else {
+      this.logger.warn("No redirect URL found in login callback");
+    }
   }
 
   @Get("userInfo")

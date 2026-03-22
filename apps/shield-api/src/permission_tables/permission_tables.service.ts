@@ -31,7 +31,7 @@ export class PermissionTablesService {
     return await this.permissionTableModel.find();
   }
 
-  async getPermissionTableById(id: ObjectId): Promise<WithId<PermissionTable>> {
+  async getPermissionTableById(id: ObjectId): Promise<WithId<PermissionTable> | null> {
     return await this.permissionTablesCollection.findOne({ _id: id });
   }
 
@@ -62,10 +62,23 @@ export class PermissionTablesService {
     const dataTree: RowFilterTreeValueDto[] = [];
 
     data.forEach((value) => {
+      const hashTableValue = hashTable[value.value];
+
+      if (!hashTableValue) {
+        this.logger.error(`Value with id ${value.value} not found in hashTable`);
+        return [];
+      }
+
       if (value.parent) {
-        hashTable[value.parent].children.push(hashTable[value.value]);
+        const hashTableParent = hashTable[value.parent];
+
+        if (!hashTableParent) {
+          this.logger.error(`Parent with id ${value.parent} not found for value with id ${value.value}`);
+          return [];
+        }
+        hashTableParent.children.push(hashTableValue);
       } else {
-        dataTree.push(hashTable[value.value]);
+        dataTree.push(hashTableValue);
       }
     });
 
@@ -107,7 +120,7 @@ export class PermissionTablesService {
         );
       }
 
-      const [row_filter] = permissionTable.row_filter;
+      const row_filter = permissionTable.row_filter[0]!;
 
       const redisKey = REDIS_KEYS.TRINO_DIMENSIONS_TABLE_VALUES(row_filter.dimensions_table);
       const redisValue = await this.ioredis.get(redisKey);
@@ -232,7 +245,7 @@ export class PermissionTablesService {
     }, {});
 
     freshRowFilterValues.forEach((rowFilterValue) => {
-      formattedFreshRowFilterValues[rowFilterValue.dimensions_table].push({
+      formattedFreshRowFilterValues[rowFilterValue.dimensions_table]?.push({
         value: rowFilterValue.value,
         display_name: rowFilterValue.display_name,
         parent: "parent" in rowFilterValue ? rowFilterValue.parent : undefined,

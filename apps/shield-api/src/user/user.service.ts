@@ -39,6 +39,7 @@ import {
   UniquePopulationOption,
   AuthorizationSource,
   specialProperties,
+  ObjectIdBrand,
 } from "@port/shield-schemas";
 import { calcSymetricDiff, getUserAttributesDiff } from "@port/shield-utils";
 import { StandardTable, formatDate, formatRawStandardTable, getObjectEntries, stringify } from "@port/utils";
@@ -201,7 +202,7 @@ export class UserService {
     const domains = [...user.domains, ...(user.permission_groups?.flatMap(({ domains }) => domains) ?? [])];
 
     domains.forEach((domain) => {
-      const domainId = domain.id.toString();
+      const domainId = domain.id.toString() as ObjectIdBrand;
       if (!mergedDomains[domainId]) {
         mergedDomains[domainId] = {
           classifications: [],
@@ -209,7 +210,7 @@ export class UserService {
       }
 
       mergedDomains[domainId]!.classifications = [
-        ...new Set([...mergedDomains[domainId]!.classifications, ...domain.classifications.map(String)]),
+        ...new Set([...mergedDomains[domainId]!.classifications, ...domain.classifications.map((id) => id.toString() as ObjectIdBrand)]),
       ];
     });
 
@@ -399,7 +400,7 @@ export class UserService {
     if (!usersList.length) {
       throw new HttpException("לא נמצאו משתמשים", HttpStatus.NO_CONTENT);
     }
-    const users = usersList.reduce((acc, currUser) => {
+    const users = usersList.reduce<ZGetUsersDictionaryDto>((acc, currUser) => {
       const mergedDomains = this.toUserDomainsDict(currUser);
       const mergedPermissionTables = mergePermissionTablesWithGroupsServer(currUser);
       const mergedAttributes = mergeAttributesWithGroupsServer(currUser);
@@ -561,7 +562,7 @@ export class UserService {
     const skip = page && USERS_PER_PAGE * (page - 1);
     const loweredSearchTerm = search?.toLowerCase();
 
-    if (filters.specialProperties && filters.specialProperties.includes(specialProperties.unique_population) && !includeUniquePopulation) {
+    if (filters?.specialProperties && filters.specialProperties.includes(specialProperties.unique_population) && !includeUniquePopulation) {
       throw new ForbiddenException("אין לך אפשרות לחפש אנשים עם אוכלוסיות מיוחדות");
     }
 
@@ -585,7 +586,9 @@ export class UserService {
         },
       ] as const satisfies PipelineStage[]);
 
-    const userFilterFunctions: { [key in keyof ZFilterUsersDto]: (value: ZFilterUsersDto[key]) => PipelineStage[] | PipelineStage } = {
+    const userFilterFunctions: {
+      [key in keyof Required<ZFilterUsersDto>]: (value: Required<ZFilterUsersDto>[key]) => PipelineStage[] | PipelineStage;
+    } = {
       domains: (domains) => {
         return [
           {
@@ -1031,7 +1034,7 @@ export class UserService {
   /**
    * @audits
    */
-  async deleteUserDomainByDomainId(id: ObjectId, domainId: ObjectId, loggedUser: LoggedUser) {
+  async deleteUserDomainByDomainId(id: ObjectId, domainId: ObjectId, loggedUser: LoggedUser): Promise<ZGetUserDto> {
     try {
       const [{ allowed }, hasUniquePopulationsAuthz] = await Promise.all([
         this.openFgaService.check({
@@ -1097,7 +1100,13 @@ export class UserService {
         permissionGroupDiff: { newPermissionGroups: [], deletedPermissionGroups: [] },
       });
 
-      return await this.getFullDataUserById({ _id: prevUser._id }, hasUniquePopulationsAuthz);
+      const user = await this.getFullDataUserById({ _id: prevUser._id }, hasUniquePopulationsAuthz);
+
+      if (!user) {
+        throw new NotFoundException(`User not found for id ${id} after domain deletion`);
+      }
+
+      return user;
     } catch (error) {
       this.auditingService.insertLegacyAudit({
         user_id: loggedUser.userId,
@@ -1298,8 +1307,8 @@ export class UserService {
               attributes: DEFAULT_USER_ATTRIBUTES_SERVER,
               domains: formattedDomains,
               permission_tables: formattedPermissionTables,
-              ...(userInfo.first_name ? { first_name: userInfo.first_name } : {}),
-              ...(userInfo.last_name ? { last_name: userInfo.last_name } : {}),
+              ...(userInfo?.first_name ? { first_name: userInfo.first_name } : {}),
+              ...(userInfo?.last_name ? { last_name: userInfo.last_name } : {}),
               permission_groups: [],
             },
           },
@@ -1344,7 +1353,7 @@ export class UserService {
         actorUserId: loggedUser.userId,
         operation: OP.Clone,
         // should always be defined - if not mongoose validation will kill the audit.
-        resource_id: bulkWriteResult.upsertedIds[index] ?? updatedUsersByIdMap.get(destinationUserId)._id,
+        resource_id: bulkWriteResult.upsertedIds[index] ?? updatedUsersByIdMap.get(destinationUserId)?._id,
         domainsDiff,
         permissionTablesDiff,
         userAttributesDiff: attributesDiff,
@@ -1450,7 +1459,17 @@ export class UserService {
           { returnDocument: "after" },
         );
 
-        newUser = await this.getFullDataUserById({ _id: user._id }, hasUniquePopulationsAuthz);
+        if (!user) {
+          throw new NotFoundException(`User ${createData.user_id} was not found after trying to update with new data`);
+        }
+
+        const updatedUser = await this.getFullDataUserById({ _id: user._id }, hasUniquePopulationsAuthz);
+
+        if (!updatedUser) {
+          throw new NotFoundException(`User ${createData.user_id} was not found after trying to get full data after update`);
+        }
+
+        newUser = updatedUser;
       } else {
         const catalogs: MongooseUser["catalogs"] = new Map(Object.entries(cloneDeep(DEFAULT_USER_CATALOGS)));
         if (createData.is_read_all) {
@@ -1472,12 +1491,21 @@ export class UserService {
         };
         const response = await this.userModel.create(insertData);
 
-        newUser = await this.getFullDataUserById({ _id: response._id }, hasUniquePopulationsAuthz);
+        const newUserFullData = await this.getFullDataUserById({ _id: response._id }, hasUniquePopulationsAuthz);
+
+        if (!newUserFullData) {
+          throw new NotFoundException(`User ${createData.user_id} was not found after creation`);
+        }
+
+        newUser = newUserFullData;
       }
 
       this.invalidateUsersDictCache();
 
-      const domainsDiff = getDomainsDiffServer([], newDomains, { splitClassifications: true, returnDeletedClassifications: true });
+      const domainsDiff = getDomainsDiffServer([] as UserDomain[], newDomains, {
+        splitClassifications: true,
+        returnDeletedClassifications: true,
+      });
       const permissionTablesDiff = getPermissionTablesDiffServer([], newPermissionTables);
       const attributesDiff = getUserAttributesDiff({ newUserAttributes: newAttributes });
 
@@ -1683,6 +1711,10 @@ export class UserService {
 
       const updatedUser = await this.getFullDataUserById({ _id: uneditedUserData._id }, hasUniquePopulationsAuthz);
 
+      if (!updatedUser) {
+        throw new NotFoundException(`User with id ${id} was not found after update`);
+      }
+
       return { user: updatedUser, lockedDomains, lockedPermissionTables };
     } catch (error) {
       this.auditingService.insertLegacyAudit({
@@ -1759,7 +1791,7 @@ export class UserService {
       object: PLATFORM_FGA_INSTANCE,
     });
 
-    return allowed;
+    return !!allowed;
   }
 
   async hasPermissionsForDeceasedPopulations(userId: UserID, domainIds: string[]): Promise<boolean> {
@@ -1818,7 +1850,7 @@ export class UserService {
           !(await this.openFgaService.isApiUser(domainDiff.last_changed_by))
         ) {
           lockedDomains.push({ id: domainDiff.id, classifications: domainDiff.classifications, operation: "update" });
-          const uneditedUserDomain = uneditedUserDomains!.find(({ id }) => id.equals(domain.id));
+          const uneditedUserDomain = uneditedUserDomains!.find(({ id }) => id.equals(domain.id))!;
           finalDomains.push({ id: uneditedUserDomain.id, classifications: uneditedUserDomain.classifications });
         } else {
           finalDomains.push(domain);
@@ -1834,7 +1866,7 @@ export class UserService {
           !(await this.openFgaService.isApiUser(domainDiff.last_changed_by))
         ) {
           lockedDomains.push({ id: domainDiff.id, classifications: domainDiff.classifications, operation: "delete" });
-          const uneditedUserDomain = uneditedUserDomains!.find(({ id }) => id.equals(domainDiff.id));
+          const uneditedUserDomain = uneditedUserDomains!.find(({ id }) => id.equals(domainDiff.id))!;
           finalDomains.push({ id: uneditedUserDomain.id, classifications: uneditedUserDomain.classifications });
         }
       }),
@@ -2128,9 +2160,9 @@ export class UserService {
             );
           }
 
-          userPermissionTable.row_filters[rowFilterIndex].values.push({
+          userPermissionTable.row_filters[rowFilterIndex]!.values.push({
             value: typeof value === "object" ? value.value : value,
-            display_name: typeof value === "object" && !value.isNew ? value.display_name : valueOption.display_name,
+            display_name: typeof value === "object" && !value.isNew ? value.display_name! : valueOption!.display_name,
           });
         });
       });
@@ -2255,7 +2287,9 @@ export class UserService {
         { ...user.catalogs },
       );
 
-      updatedCatalogs[DATALAKE_CATALOG_NAME] = user.catalogs[DATALAKE_CATALOG_NAME];
+      if (user.catalogs[DATALAKE_CATALOG_NAME]) {
+        updatedCatalogs[DATALAKE_CATALOG_NAME] = user.catalogs[DATALAKE_CATALOG_NAME];
+      }
 
       const updateData = {
         catalogs: updatedCatalogs,
@@ -2336,7 +2370,9 @@ export class UserService {
         return acc;
       }, {});
 
-      updatedCatalogs[DATALAKE_CATALOG_NAME] = user.catalogs[DATALAKE_CATALOG_NAME];
+      if (user.catalogs[DATALAKE_CATALOG_NAME]) {
+        updatedCatalogs[DATALAKE_CATALOG_NAME] = user.catalogs[DATALAKE_CATALOG_NAME];
+      }
 
       const updateData = {
         catalogs: updatedCatalogs,
@@ -2413,7 +2449,9 @@ export class UserService {
         return acc;
       }, {});
 
-      updatedCatalogs[DATALAKE_CATALOG_NAME] = user.catalogs[DATALAKE_CATALOG_NAME];
+      if (user.catalogs[DATALAKE_CATALOG_NAME]) {
+        updatedCatalogs[DATALAKE_CATALOG_NAME] = user.catalogs[DATALAKE_CATALOG_NAME];
+      }
 
       const updateData = {
         catalogs: updatedCatalogs,
@@ -2468,7 +2506,7 @@ export class UserService {
 
   async refreshSapPermittedUsers() {
     const currentUsersInMongo = await this.getSapPermittedUsers();
-    const currentUsersInMongoMap = {};
+    const currentUsersInMongoMap: Record<string, boolean> = {};
     currentUsersInMongo.forEach(({ user_id }) => {
       currentUsersInMongoMap[user_id] = true;
     });
@@ -2479,7 +2517,7 @@ export class UserService {
     FROM mock_sap_users
   `;
     const usersInTrino = await this.trinoService.query<{ user_id: string }>(query);
-    const usersInTrinoMap = {};
+    const usersInTrinoMap: Record<string, boolean> = {};
     usersInTrino.forEach(({ user_id }) => {
       usersInTrinoMap[user_id] = true;
     });
@@ -2582,7 +2620,7 @@ export class UserService {
       domains: mergedCurrDomains,
     };
 
-    return type === "full" ? this.opaApi.getUserLivePermissions(payload) : this.opaApi.getUserPermissionsByTableAndUser(table, payload);
+    return type === "full" ? this.opaApi.getUserLivePermissions(payload) : this.opaApi.getUserPermissionsByTableAndUser(table!, payload);
   }
 
   async getLiveTablesByUser(userId: UserID, { type, data }: ZGetUserPreviewDto): Promise<ZTablePreviewDto[]> {
@@ -2650,14 +2688,14 @@ export class UserService {
         };
       });
     } else {
-      const domains = this.toUserDomainsDict(data);
+      const domains = this.toUserDomainsDict(data!);
       const [opaNewTables, opaCurrTables] = await Promise.all([
         this.opaApi.getUserLivePermissions({
           user_id: userId,
           catalogs: {
             [DATALAKE_CATALOG_NAME]: {
               ...DEFAULT_USER_CATALOGS.datalake,
-              read_all: data.is_read_all,
+              read_all: data!.is_read_all,
             },
           },
           domains,
@@ -2716,7 +2754,7 @@ export class UserService {
         attributes: {
           ...col.attributes,
           ...status,
-          data_type: dbTypeMapping[parsed_data_type] ?? parsed_data_type,
+          data_type: parsed_data_type in dbTypeMapping ? dbTypeMapping[parsed_data_type as keyof typeof dbTypeMapping] : parsed_data_type,
         },
       };
     }
@@ -2812,13 +2850,13 @@ export class UserService {
       const columns = await this.getUserDataPermissionsByUserId(userId, "table", table);
       columnsWithStatus = columns.map((col) => ({ column_name: col }));
     } else if (type === "new") {
-      const domains = this.toUserDomainsDict(data);
+      const domains = this.toUserDomainsDict(data!);
       const columns = await this.opaApi.getUserPermissionsByTableAndUser(table, {
         user_id: userId,
         catalogs: {
           [DATALAKE_CATALOG_NAME]: {
             ...DEFAULT_USER_CATALOGS.datalake,
-            read_all: data.is_read_all,
+            read_all: data!.is_read_all,
           },
         },
         domains: domains,
@@ -2826,14 +2864,14 @@ export class UserService {
 
       columnsWithStatus = columns.map((col) => ({ column_name: col, is_new: true }));
     } else {
-      const domains = this.toUserDomainsDict(data);
+      const domains = this.toUserDomainsDict(data!);
       const [newColumns, currColumns] = await Promise.all([
         this.opaApi.getUserPermissionsByTableAndUser(table, {
           user_id: userId,
           catalogs: {
             [DATALAKE_CATALOG_NAME]: {
               ...DEFAULT_USER_CATALOGS.datalake,
-              read_all: data.is_read_all,
+              read_all: data!.is_read_all,
             },
           },
           domains: domains,

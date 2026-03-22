@@ -12,9 +12,9 @@ export const OidcClientProvider: Provider = {
     const trustIssuer = await Issuer.discover(issuerUrl);
 
     const client = new trustIssuer.Client({
-      client_id: configService.get("keycloak.clientId", { infer: true }),
-      client_secret: configService.get("keycloak.clientSecret", { infer: true }),
-      redirect_uris: [configService.get("keycloak.redirectUri", { infer: true })],
+      client_id: configService.get("keycloak.clientId", { infer: true })!,
+      client_secret: configService.get("keycloak.clientSecret", { infer: true })!,
+      redirect_uris: [configService.get("keycloak.redirectUri", { infer: true })!],
     });
 
     return client;

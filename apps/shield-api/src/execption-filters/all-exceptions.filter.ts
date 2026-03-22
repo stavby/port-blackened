@@ -24,7 +24,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     // class validator
     if (httpStatus === HttpStatus.BAD_REQUEST) {
-      if (typeof response === "object" && "message" in response) {
+      if (typeof response === "object" && response !== null && "message" in response) {
         exception.cause = response.message;
       }
     }

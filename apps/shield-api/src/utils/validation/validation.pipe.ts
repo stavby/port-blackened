@@ -12,7 +12,7 @@ export class CustomValidationPipe implements PipeTransform {
   }
 
   private isZodDto(metatype: unknown): metatype is ZodDto<unknown> {
-    return metatype && (typeof metatype === "function" || typeof metatype === "object") && "isZodDto" in metatype && !!metatype.isZodDto;
+    return !!metatype && (typeof metatype === "function" || typeof metatype === "object") && "isZodDto" in metatype && !!metatype.isZodDto;
   }
 
   transform(value: unknown, metadata: ArgumentMetadata) {

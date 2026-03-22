@@ -16,7 +16,7 @@ class RecordValidator<T extends Record<string, unknown>> implements ValidatorCon
   private validationErrors: ValidationError[][] = [];
 
   async validate(record: Record<string, T>, validationArguments?: ValidationArguments): Promise<boolean> {
-    const ClassTransformer = validationArguments.constraints?.[0] as ClassConstructor<T>;
+    const ClassTransformer = validationArguments?.constraints?.[0] as ClassConstructor<T>;
 
     if (!ClassTransformer) {
       return false;
@@ -48,7 +48,7 @@ class RecordValidator<T extends Record<string, unknown>> implements ValidatorCon
     return this.validationErrors
       .map((errors) =>
         errors
-          .reduce((acc, error) => {
+          .reduce<ValidationError[]>((acc, error) => {
             return [...acc, error];
           }, [])
           .join(","),
@@ -62,11 +62,14 @@ export const ValidateRecord = (valueClass: ClassConstructor<unknown>) => {
     IsObject(),
     Validate(RecordValidator, [valueClass]),
     Transform(({ value }) =>
-      Object.keys(value).reduce((transformedObj, currKey) => {
-        transformedObj[currKey] = plainToClass(valueClass, value[currKey]);
+      Object.keys(value).reduce(
+        (transformedObj, currKey) => {
+          transformedObj[currKey] = plainToClass(valueClass, value[currKey]);
 
-        return transformedObj;
-      }, {}),
+          return transformedObj;
+        },
+        {} as Record<string, unknown>,
+      ),
     ),
   );
 };

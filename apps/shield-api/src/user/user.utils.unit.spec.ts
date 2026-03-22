@@ -33,8 +33,8 @@ const sortPermissionTables = (permissionTables: PermissionTableDiffServer[]) => 
 };
 
 describe("getDomainDiff", () => {
-  const domainIds = [new ObjectId(), new ObjectId(), new ObjectId()];
-  const classificationIds = [new ObjectId(), new ObjectId(), new ObjectId(), new ObjectId(), new ObjectId(), new ObjectId()];
+  const domainIds = [new ObjectId(), new ObjectId(), new ObjectId()] as const;
+  const classificationIds = [new ObjectId(), new ObjectId(), new ObjectId(), new ObjectId(), new ObjectId(), new ObjectId()] as const;
   const last_changed_by: UserDomain["last_changed_by"] = "fake_user_id" as UserID;
 
   test.each<{
@@ -195,12 +195,12 @@ describe("getDomainDiff", () => {
 describe("getPermissionTablesDiff", () => {
   const permissionTableIds = [new ObjectId(), new ObjectId(), new ObjectId(), new ObjectId()] as const;
   const rowFilterKods = ["1", "2", "3"] as const;
-  const values: UserRowFilter["values"] = [
+  const values = [
     { value: 1, display_name: "zibi" },
     { value: 6, display_name: "zoobi" },
     { value: "wow", display_name: "zabka" },
     { value: "crazy", display_name: "yo" },
-  ];
+  ] as const satisfies UserRowFilter["values"];
 
   test.each<{
     desc: string;

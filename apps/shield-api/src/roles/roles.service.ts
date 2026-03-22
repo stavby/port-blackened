@@ -12,7 +12,7 @@ import { getRolesDtoWithObjectIdTransform, ZGetRolesDto, ZGetRolesFgaPermissionM
 export class RolesService {
   constructor(@InjectModel(MongooseRole.name) private readonly roleModel: Model<MongooseRole>) {}
 
-  async getRoleById(roleID: ObjectId): Promise<WithId<Role>> {
+  async getRoleById(roleID: ObjectId): Promise<WithId<Role> | null> {
     return await this.roleModel.findOne({ _id: roleID }).exec();
   }
 

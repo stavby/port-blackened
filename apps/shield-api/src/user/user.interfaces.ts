@@ -46,10 +46,10 @@ export type UserExcel = Pick<User, "user_id"> &
     deceased_population?: string;
     domain_display_name: Domain["display_name"];
     classifications: string;
-    given_by: string;
-    create_date: string;
-    last_changed_by: string;
-    last_change: string;
+    given_by: string | undefined;
+    create_date: string | undefined;
+    last_changed_by: string | undefined;
+    last_change: string | undefined;
   };
 
 export type CreateUserDtoAttributes = ZCreateUserDto["attributes"];

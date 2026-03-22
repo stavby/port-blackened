@@ -15,6 +15,7 @@ import { ValidatorConstraint, ValidatorConstraintInterface } from "class-validat
 import { formatRawStandardTable } from "src/utils/utils";
 import { EditableColumnsDict } from "./table.classes";
 import { DEFAULT_MASK } from "./table.constants";
+import { InternalServerErrorException } from "@nestjs/common";
 
 export const getColumnsDictDiff = (currColumnsDict: EditableColumnsDict, newColumnsDict: EditableColumnsDict): ColumnDictDiff[] => {
   const newSchema = Object.values(newColumnsDict);
@@ -187,22 +188,27 @@ export const upsertTableToSpyglassEvent = (
     table_display_name: data.table_display_name,
     table_desc: data.table_desc,
     owner: data.owner,
-    co_owners: "co_owners" in data ? data.co_owners : [],
+    co_owners: "co_owners" in data ? (data.co_owners ?? []) : [],
   } as const satisfies Partial<CreateEvent>;
-  if (data.application === "connect") {
+
+  const application = data.application;
+
+  if (application === "connect") {
     return { ...event, application: "connect", process_type: data.process_type, schedule_interval: data.schedule };
   }
   const queryBasedData = {
     sql_query: data.query,
     schedule_type: data.schedule_type,
-    dependencies: data.updating_dependencies,
+    dependencies: data.updating_dependencies ?? [],
     all_dependencies: data.all_dependencies,
     schedule_interval: data.schedule ?? "",
   } as const satisfies Partial<CreateEvent>;
-  if (data.application === "remix") {
+  if (application === "remix") {
     return { application: "remix", ...event, ...queryBasedData };
   }
-  if (data.application === "external") {
+  if (application === "external") {
     return { application: "external", ...event, ...queryBasedData, process_type: data.process_type };
   }
+
+  throw new InternalServerErrorException(`Unknown application type: ${application satisfies never}`);
 };
