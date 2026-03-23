@@ -11,6 +11,9 @@ export const config = (): ConfigProps => {
     mongodb: {
       connectionString: process.env.MONGODB_CONNECTION_STRING,
     },
+    postgres: {
+      connectionString: process.env.DATABASE_URL,
+    },
     trino: {
       server: process.env.TRINO_SERVER,
       user: process.env.TRINO_ADMIN_USER,

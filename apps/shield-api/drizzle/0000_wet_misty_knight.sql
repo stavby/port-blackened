@@ -171,6 +171,7 @@ CREATE TABLE "permission_table_row_filters" (
 	"type" "permission_table_row_filter_type" NOT NULL,
 	"query_builder_type" "permission_table_row_filter_query_builder_type" NOT NULL,
 	CONSTRAINT "perm_tbl_rf_pk" PRIMARY KEY("id"),
+	CONSTRAINT "perm_tbl_rf_id_tbl_uq" UNIQUE("id","permission_table_id"),
 	CONSTRAINT "perm_tbl_rf_uq" UNIQUE("permission_table_id","kod")
 );
 --> statement-breakpoint
@@ -337,18 +338,12 @@ CREATE TABLE "user_permission_groups" (
 --> statement-breakpoint
 CREATE TABLE "user_permission_table_row_filter_values" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
-	"user_permission_table_row_filter_id" uuid NOT NULL,
+	"user_permission_table_id" uuid NOT NULL,
+	"permission_table_id" uuid NOT NULL,
+	"permission_table_row_filter_id" uuid NOT NULL,
 	"value" jsonb NOT NULL,
 	"display_name" text NOT NULL,
 	CONSTRAINT "usr_pt_rfv_pk" PRIMARY KEY("id")
-);
---> statement-breakpoint
-CREATE TABLE "user_permission_table_row_filters" (
-	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
-	"user_permission_table_id" uuid NOT NULL,
-	"kod" text NOT NULL,
-	CONSTRAINT "usr_pt_rf_pk" PRIMARY KEY("id"),
-	CONSTRAINT "usr_pt_rf_uq" UNIQUE("user_permission_table_id","kod")
 );
 --> statement-breakpoint
 CREATE TABLE "user_permission_tables" (
@@ -360,6 +355,7 @@ CREATE TABLE "user_permission_tables" (
 	"last_change" timestamp,
 	"create_date" timestamp,
 	CONSTRAINT "usr_pt_pk" PRIMARY KEY("id"),
+	CONSTRAINT "usr_pt_id_tbl_uq" UNIQUE("id","permission_table_id"),
 	CONSTRAINT "usr_pt_uq" UNIQUE("user_id","permission_table_id")
 );
 --> statement-breakpoint
@@ -392,13 +388,12 @@ CREATE TABLE "users" (
 	CONSTRAINT "users_user_id_unique" UNIQUE("user_id")
 );
 --> statement-breakpoint
-ALTER TABLE "application_user_domain_classifications" ADD CONSTRAINT "app_usr_dom_cls_ud_fk" FOREIGN KEY ("application_user_domain_id") REFERENCES "public"."application_user_domains"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "application_user_domain_classifications" ADD CONSTRAINT "app_usr_dom_cls_cls_fk" FOREIGN KEY ("classification_id") REFERENCES "public"."classifications"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "application_user_domain_classifications" ADD CONSTRAINT "app_usr_dom_cls_fk_ud" FOREIGN KEY ("application_user_domain_id","domain_id") REFERENCES "public"."application_user_domains"("id","domain_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "application_user_domain_classifications" ADD CONSTRAINT "app_usr_dom_cls_fk_ud" FOREIGN KEY ("application_user_domain_id","domain_id") REFERENCES "public"."application_user_domains"("id","domain_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "application_user_domain_classifications" ADD CONSTRAINT "app_usr_dom_cls_fk_dc" FOREIGN KEY ("domain_id","classification_id") REFERENCES "public"."domain_classifications"("domain_id","classification_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "application_user_domain_roles" ADD CONSTRAINT "app_usr_dom_role_ud_fk" FOREIGN KEY ("application_user_domain_id") REFERENCES "public"."application_user_domains"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "application_user_domain_roles" ADD CONSTRAINT "app_usr_dom_role_dom_fk" FOREIGN KEY ("application_user_domain_id") REFERENCES "public"."application_user_domains"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "application_user_domain_roles" ADD CONSTRAINT "app_usr_dom_role_role_fk" FOREIGN KEY ("role_id") REFERENCES "public"."roles"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "application_user_domains" ADD CONSTRAINT "app_usr_dom_usr_fk" FOREIGN KEY ("application_user_id") REFERENCES "public"."application_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "application_user_domains" ADD CONSTRAINT "app_usr_dom_usr_fk" FOREIGN KEY ("application_user_id") REFERENCES "public"."application_users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "application_user_domains" ADD CONSTRAINT "app_usr_dom_dom_fk" FOREIGN KEY ("domain_id") REFERENCES "public"."domains"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "domain_classifications" ADD CONSTRAINT "dom_cls_dom_fk" FOREIGN KEY ("domain_id") REFERENCES "public"."domains"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "domain_classifications" ADD CONSTRAINT "dom_cls_cls_fk" FOREIGN KEY ("classification_id") REFERENCES "public"."classifications"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -413,28 +408,29 @@ ALTER TABLE "permission_group_permission_tables" ADD CONSTRAINT "perm_grp_pt_grp
 ALTER TABLE "permission_group_permission_tables" ADD CONSTRAINT "perm_grp_pt_tbl_fk" FOREIGN KEY ("permission_table_id") REFERENCES "public"."permission_tables"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "permission_table_keys" ADD CONSTRAINT "perm_tbl_key_tbl_fk" FOREIGN KEY ("permission_table_id") REFERENCES "public"."permission_tables"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "permission_table_row_filters" ADD CONSTRAINT "perm_tbl_rf_tbl_fk" FOREIGN KEY ("permission_table_id") REFERENCES "public"."permission_tables"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "table_co_owners" ADD CONSTRAINT "tbl_co_own_tbl_fk" FOREIGN KEY ("table_id") REFERENCES "public"."tables"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "table_columns" ADD CONSTRAINT "tbl_col_tbl_fk" FOREIGN KEY ("table_id") REFERENCES "public"."tables"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "table_co_owners" ADD CONSTRAINT "tbl_co_own_tbl_fk" FOREIGN KEY ("table_id") REFERENCES "public"."tables"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "table_columns" ADD CONSTRAINT "tbl_col_tbl_fk" FOREIGN KEY ("table_id") REFERENCES "public"."tables"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "table_columns" ADD CONSTRAINT "tbl_cols_tbl_dom_fk" FOREIGN KEY ("table_id","domain_id") REFERENCES "public"."tables"("id","domain_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "table_columns" ADD CONSTRAINT "tbl_cols_dom_cls_fk" FOREIGN KEY ("domain_id","classification_id") REFERENCES "public"."domain_classifications"("domain_id","classification_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "table_columns" ADD CONSTRAINT "tbl_col_msk_fk" FOREIGN KEY ("mask_id") REFERENCES "public"."column_masks"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "table_verification_stages" ADD CONSTRAINT "tbl_vrf_stg_tbl_fk" FOREIGN KEY ("table_id") REFERENCES "public"."tables"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "table_verification_stages" ADD CONSTRAINT "tbl_vrf_stg_tbl_fk" FOREIGN KEY ("table_id") REFERENCES "public"."tables"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tables" ADD CONSTRAINT "tbl_dom_fk" FOREIGN KEY ("domain_id") REFERENCES "public"."domains"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tables" ADD CONSTRAINT "tbl_pt_fk" FOREIGN KEY ("permission_table_id") REFERENCES "public"."permission_tables"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tasks" ADD CONSTRAINT "task_tbl_fk" FOREIGN KEY ("table_id") REFERENCES "public"."tables"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "user_catalog_schemas" ADD CONSTRAINT "usr_cat_sch_cat_fk" FOREIGN KEY ("user_catalog_id") REFERENCES "public"."user_catalogs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "user_catalogs" ADD CONSTRAINT "usr_cat_usr_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "user_domain_classifications" ADD CONSTRAINT "usr_dom_cls_fk_ud" FOREIGN KEY ("user_domain_id") REFERENCES "public"."user_domains"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_catalog_schemas" ADD CONSTRAINT "usr_cat_sch_cat_fk" FOREIGN KEY ("user_catalog_id") REFERENCES "public"."user_catalogs"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_catalogs" ADD CONSTRAINT "usr_cat_usr_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_domain_classifications" ADD CONSTRAINT "usr_dom_cls_fk_ud" FOREIGN KEY ("user_domain_id") REFERENCES "public"."user_domains"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_domain_classifications" ADD CONSTRAINT "usr_dom_cls_fk_cls" FOREIGN KEY ("classification_id") REFERENCES "public"."classifications"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_domain_classifications" ADD CONSTRAINT "usr_dom_cls_fk_ud_dom" FOREIGN KEY ("user_domain_id","domain_id") REFERENCES "public"."user_domains"("id","domain_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_domain_classifications" ADD CONSTRAINT "usr_dom_cls_fk_dom_cls" FOREIGN KEY ("domain_id","classification_id") REFERENCES "public"."domain_classifications"("domain_id","classification_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "user_domains" ADD CONSTRAINT "usr_dom_usr_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_domains" ADD CONSTRAINT "usr_dom_usr_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_domains" ADD CONSTRAINT "usr_dom_dom_fk" FOREIGN KEY ("domain_id") REFERENCES "public"."domains"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "user_permission_groups" ADD CONSTRAINT "usr_pg_usr_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_permission_groups" ADD CONSTRAINT "usr_pg_usr_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_permission_groups" ADD CONSTRAINT "usr_pg_dom_fk" FOREIGN KEY ("domain_id") REFERENCES "public"."domains"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "user_permission_table_row_filter_values" ADD CONSTRAINT "usr_pt_rfv_rf_fk" FOREIGN KEY ("user_permission_table_row_filter_id") REFERENCES "public"."user_permission_table_row_filters"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "user_permission_table_row_filters" ADD CONSTRAINT "usr_pt_rf_pt_fk" FOREIGN KEY ("user_permission_table_id") REFERENCES "public"."user_permission_tables"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "user_permission_tables" ADD CONSTRAINT "usr_pt_usr_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_permission_table_row_filter_values" ADD CONSTRAINT "usr_pt_rfv_pt_fk" FOREIGN KEY ("user_permission_table_id") REFERENCES "public"."user_permission_tables"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_permission_table_row_filter_values" ADD CONSTRAINT "usr_pt_rfv_pt_tbl_fk" FOREIGN KEY ("user_permission_table_id","permission_table_id") REFERENCES "public"."user_permission_tables"("id","permission_table_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_permission_table_row_filter_values" ADD CONSTRAINT "usr_pt_rfv_rf_tbl_fk" FOREIGN KEY ("permission_table_row_filter_id","permission_table_id") REFERENCES "public"."permission_table_row_filters"("id","permission_table_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_permission_tables" ADD CONSTRAINT "usr_pt_usr_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_permission_tables" ADD CONSTRAINT "usr_pt_tbl_fk" FOREIGN KEY ("permission_table_id") REFERENCES "public"."permission_tables"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "user_unique_populations" ADD CONSTRAINT "usr_up_usr_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_unique_populations" ADD CONSTRAINT "usr_up_usr_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "users" ADD CONSTRAINT "usr_type_fk" FOREIGN KEY ("user_type_id") REFERENCES "public"."user_types"("id") ON DELETE no action ON UPDATE no action;

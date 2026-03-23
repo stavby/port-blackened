@@ -107,9 +107,11 @@ export class UserDomain {
   create_date?: Date;
 }
 
+export type UserRowFilterValueValue = string | number;
+
 export class UserRowFilterValue {
   @IsNotEmpty()
-  value: string | number;
+  value: UserRowFilterValueValue;
 
   @IsNotEmptyString()
   display_name: string;

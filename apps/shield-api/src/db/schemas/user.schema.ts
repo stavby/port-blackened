@@ -2,7 +2,8 @@ import { relations } from "drizzle-orm";
 import { boolean, foreignKey, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 import { classifications } from "./classification.schema";
 import { domainClassifications, domains } from "./domain.schema";
-import { permissionTables } from "./permission_table.schema";
+import { permissionTableRowFilters, permissionTables } from "./permission_table.schema";
+import { UserRowFilterValueValue } from "src/user/user.classes";
 
 export const userTypes = pgTable(
   "user_types",
@@ -166,6 +167,7 @@ export const userPermissionTables = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.id], name: "usr_pt_pk" }),
+    unique("usr_pt_id_tbl_uq").on(table.id, table.permissionTableId),
     unique("usr_pt_uq").on(table.userId, table.permissionTableId),
     foreignKey({
       columns: [table.userId],
@@ -180,39 +182,33 @@ export const userPermissionTables = pgTable(
   ],
 );
 
-export const userPermissionTableRowFilters = pgTable(
-  "user_permission_table_row_filters",
-  {
-    id: uuid("id").defaultRandom().notNull(),
-    userPermissionTableId: uuid("user_permission_table_id").notNull(),
-    kod: text("kod").notNull(),
-  },
-  (table) => [
-    primaryKey({ columns: [table.id], name: "usr_pt_rf_pk" }),
-    unique("usr_pt_rf_uq").on(table.userPermissionTableId, table.kod),
-    foreignKey({
-      columns: [table.userPermissionTableId],
-      foreignColumns: [userPermissionTables.id],
-      name: "usr_pt_rf_pt_fk",
-    }).onDelete("cascade"),
-  ],
-);
-
 export const userPermissionTableRowFilterValues = pgTable(
   "user_permission_table_row_filter_values",
   {
     id: uuid("id").defaultRandom().notNull(),
-    userPermissionTableRowFilterId: uuid("user_permission_table_row_filter_id").notNull(),
-    value: jsonb("value").notNull(),
+    userPermissionTableId: uuid("user_permission_table_id").notNull(),
+    permissionTableId: uuid("permission_table_id").notNull(),
+    permissionTableRowFilterId: uuid("permission_table_row_filter_id").notNull(),
+    value: jsonb("value").$type<UserRowFilterValueValue>().notNull(),
     displayName: text("display_name").notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.id], name: "usr_pt_rfv_pk" }),
     foreignKey({
-      columns: [table.userPermissionTableRowFilterId],
-      foreignColumns: [userPermissionTableRowFilters.id],
-      name: "usr_pt_rfv_rf_fk",
+      columns: [table.userPermissionTableId],
+      foreignColumns: [userPermissionTables.id],
+      name: "usr_pt_rfv_pt_fk",
     }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.userPermissionTableId, table.permissionTableId],
+      foreignColumns: [userPermissionTables.id, userPermissionTables.permissionTableId],
+      name: "usr_pt_rfv_pt_tbl_fk",
+    }),
+    foreignKey({
+      columns: [table.permissionTableRowFilterId, table.permissionTableId],
+      foreignColumns: [permissionTableRowFilters.id, permissionTableRowFilters.permissionTableId],
+      name: "usr_pt_rfv_rf_tbl_fk",
+    }),
   ],
 );
 
@@ -311,21 +307,17 @@ export const userPermissionTablesRelations = relations(userPermissionTables, ({ 
     fields: [userPermissionTables.permissionTableId],
     references: [permissionTables.id],
   }),
-  rowFilters: many(userPermissionTableRowFilters),
-}));
-
-export const userPermissionTableRowFiltersRelations = relations(userPermissionTableRowFilters, ({ one, many }) => ({
-  userPermissionTable: one(userPermissionTables, {
-    fields: [userPermissionTableRowFilters.userPermissionTableId],
-    references: [userPermissionTables.id],
-  }),
-  values: many(userPermissionTableRowFilterValues),
+  rowFilterValues: many(userPermissionTableRowFilterValues),
 }));
 
 export const userPermissionTableRowFilterValuesRelations = relations(userPermissionTableRowFilterValues, ({ one }) => ({
-  rowFilter: one(userPermissionTableRowFilters, {
-    fields: [userPermissionTableRowFilterValues.userPermissionTableRowFilterId],
-    references: [userPermissionTableRowFilters.id],
+  userPermissionTable: one(userPermissionTables, {
+    fields: [userPermissionTableRowFilterValues.userPermissionTableId],
+    references: [userPermissionTables.id],
+  }),
+  rowFilter: one(permissionTableRowFilters, {
+    fields: [userPermissionTableRowFilterValues.permissionTableRowFilterId],
+    references: [permissionTableRowFilters.id],
   }),
 }));
 

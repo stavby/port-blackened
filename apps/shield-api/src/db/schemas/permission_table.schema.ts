@@ -31,6 +31,7 @@ export const permissionTableRowFilters = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.id], name: "perm_tbl_rf_pk" }),
+    unique("perm_tbl_rf_id_tbl_uq").on(table.id, table.permissionTableId),
     unique("perm_tbl_rf_uq").on(table.permissionTableId, table.kod),
     foreignKey({
       columns: [table.permissionTableId],

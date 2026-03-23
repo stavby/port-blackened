@@ -1,5 +1,5 @@
 {
-  "id": "42655d2e-a441-403d-83fa-0c851d341f51",
+  "id": "7ab3ca61-c3df-43ce-a8d7-e279b1a1a537",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -29,19 +29,6 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "app_usr_dom_cls_ud_fk": {
-          "name": "app_usr_dom_cls_ud_fk",
-          "tableFrom": "application_user_domain_classifications",
-          "tableTo": "application_user_domains",
-          "columnsFrom": [
-            "application_user_domain_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
         "app_usr_dom_cls_cls_fk": {
           "name": "app_usr_dom_cls_cls_fk",
           "tableFrom": "application_user_domain_classifications",
@@ -67,7 +54,7 @@
             "id",
             "domain_id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "app_usr_dom_cls_fk_dc": {
@@ -119,8 +106,8 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "app_usr_dom_role_ud_fk": {
-          "name": "app_usr_dom_role_ud_fk",
+        "app_usr_dom_role_dom_fk": {
+          "name": "app_usr_dom_role_dom_fk",
           "tableFrom": "application_user_domain_roles",
           "tableTo": "application_user_domains",
           "columnsFrom": [
@@ -129,7 +116,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "app_usr_dom_role_role_fk": {
@@ -196,7 +183,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "app_usr_dom_dom_fk": {
@@ -1300,6 +1287,14 @@
         }
       },
       "uniqueConstraints": {
+        "perm_tbl_rf_id_tbl_uq": {
+          "name": "perm_tbl_rf_id_tbl_uq",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "permission_table_id"
+          ]
+        },
         "perm_tbl_rf_uq": {
           "name": "perm_tbl_rf_uq",
           "nullsNotDistinct": false,
@@ -1597,7 +1592,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1704,7 +1699,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "tbl_cols_tbl_dom_fk": {
@@ -1815,7 +1810,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -2155,7 +2150,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -2229,7 +2224,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -2290,7 +2285,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "usr_dom_cls_fk_cls": {
@@ -2411,7 +2406,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "usr_dom_dom_fk": {
@@ -2506,7 +2501,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "usr_pg_dom_fk": {
@@ -2556,8 +2551,20 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "user_permission_table_row_filter_id": {
-          "name": "user_permission_table_row_filter_id",
+        "user_permission_table_id": {
+          "name": "user_permission_table_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permission_table_id": {
+          "name": "permission_table_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "permission_table_row_filter_id": {
+          "name": "permission_table_row_filter_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -2577,15 +2584,45 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "usr_pt_rfv_rf_fk": {
-          "name": "usr_pt_rfv_rf_fk",
+        "usr_pt_rfv_pt_fk": {
+          "name": "usr_pt_rfv_pt_fk",
           "tableFrom": "user_permission_table_row_filter_values",
-          "tableTo": "user_permission_table_row_filters",
+          "tableTo": "user_permission_tables",
           "columnsFrom": [
-            "user_permission_table_row_filter_id"
+            "user_permission_table_id"
           ],
           "columnsTo": [
             "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "usr_pt_rfv_pt_tbl_fk": {
+          "name": "usr_pt_rfv_pt_tbl_fk",
+          "tableFrom": "user_permission_table_row_filter_values",
+          "tableTo": "user_permission_tables",
+          "columnsFrom": [
+            "user_permission_table_id",
+            "permission_table_id"
+          ],
+          "columnsTo": [
+            "id",
+            "permission_table_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "usr_pt_rfv_rf_tbl_fk": {
+          "name": "usr_pt_rfv_rf_tbl_fk",
+          "tableFrom": "user_permission_table_row_filter_values",
+          "tableTo": "permission_table_row_filters",
+          "columnsFrom": [
+            "permission_table_row_filter_id",
+            "permission_table_id"
+          ],
+          "columnsTo": [
+            "id",
+            "permission_table_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -2600,68 +2637,6 @@
         }
       },
       "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.user_permission_table_row_filters": {
-      "name": "user_permission_table_row_filters",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "user_permission_table_id": {
-          "name": "user_permission_table_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "kod": {
-          "name": "kod",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "usr_pt_rf_pt_fk": {
-          "name": "usr_pt_rf_pt_fk",
-          "tableFrom": "user_permission_table_row_filters",
-          "tableTo": "user_permission_tables",
-          "columnsFrom": [
-            "user_permission_table_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "usr_pt_rf_pk": {
-          "name": "usr_pt_rf_pk",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {
-        "usr_pt_rf_uq": {
-          "name": "usr_pt_rf_uq",
-          "nullsNotDistinct": false,
-          "columns": [
-            "user_permission_table_id",
-            "kod"
-          ]
-        }
-      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2726,7 +2701,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "usr_pt_tbl_fk": {
@@ -2752,6 +2727,14 @@
         }
       },
       "uniqueConstraints": {
+        "usr_pt_id_tbl_uq": {
+          "name": "usr_pt_id_tbl_uq",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "permission_table_id"
+          ]
+        },
         "usr_pt_uq": {
           "name": "usr_pt_uq",
           "nullsNotDistinct": false,
@@ -2842,7 +2825,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },

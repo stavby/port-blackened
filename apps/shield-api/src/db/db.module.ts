@@ -22,4 +22,4 @@ import { DATABASE_CONNECTION_TOKEN } from "./db-connections";
   ],
   exports: [DATABASE_CONNECTION_TOKEN],
 })
-export class DatabaseModule {}
+export class DbModule {}
