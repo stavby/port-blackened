@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Query } from "@nestjs/common";
-import { ApiParam } from "@nestjs/swagger";
+import { ApiParam, ApiTags } from "@nestjs/swagger";
 import { ObjectId } from "mongodb";
 import { ParseObjectIdPipe } from "src/utils/mongo.utils";
 import { GetRowFilterValuesQueryParams } from "./permission_table.dto";
@@ -9,6 +9,7 @@ import { ExternalApi } from "src/utils/api.decorators";
 import { PermissionTableDictionary } from "./permissions_tables.interfaces";
 
 @Controller("permission_tables")
+@ApiTags("Permission Tables")
 export class PermissionTablesController {
   constructor(private readonly permissionTablesService: PermissionTablesService) {}
 

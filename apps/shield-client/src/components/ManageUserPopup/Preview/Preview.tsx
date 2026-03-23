@@ -62,20 +62,18 @@ const groupDataSets = (datasets: TablePreviewDto[]): GroupedDataSets<TablePrevie
 const Preview = (props: PreviewProps) => {
   const { addionalSx, ...propsWithoutSx } = props;
   const previewUser = useMemo<GetUserPreviewWithId>(
-    () => ({
-      userId: propsWithoutSx.type === "current" ? propsWithoutSx.userId : propsWithoutSx.user.user_id,
+    () => propsWithoutSx.type === "current" ? { type: "current", userId: propsWithoutSx.userId } : {
+       userId:  propsWithoutSx.user.user_id,
       data:
-        propsWithoutSx.type === "current"
-          ? undefined
-          : {
+        {
               domains: propsWithoutSx.user.domains.map((domain) => ({
                 id: domain.id,
                 classifications: domain.classifications.map(({ _id }) => _id),
               })),
               is_read_all: propsWithoutSx.user.is_read_all ?? false,
             },
-      type: propsWithoutSx.type,
-    }),
+      type: propsWithoutSx.type
+    },
     [propsWithoutSx],
   );
   const { data, isSuccess, isLoading, isError } = useGetLiveTablesByUser(previewUser.userId, previewUser, {

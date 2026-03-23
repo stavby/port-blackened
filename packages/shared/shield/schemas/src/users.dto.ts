@@ -100,27 +100,33 @@ export const getDictUserDto = z
 
 export const getUsersDictionaryDtoSchema = z.record(baseUserSchema.shape.user_id, getDictUserDto);
 
-export const getUserPreviewSchema = z
-  .object({
-    type: z.enum(["current", "new", "compare"]),
-    data: z
-      .object({
-        domains: baseUserSchema.shape.domains.element
-          .pick({
-            id: true,
-            classifications: true,
-          })
-          .array(),
-        is_read_all: z.boolean(),
-      })
-      .optional(),
-  })
-  .refine(
-    (arg) => !((arg.type === "compare" || arg.type === "new") && !arg.data),
-    (arg) => ({
-      message: `Payload must include data for type ${arg.type}`,
-    }),
-  );
+const getUserPreviewDataSchema = z.object({
+  domains: baseUserSchema.shape.domains.element
+    .pick({
+      id: true,
+      classifications: true,
+    })
+    .array(),
+  is_read_all: z.boolean(),
+});
+
+const getNewUserPreviewSchema = z.object({
+  type: z.literal("new"),
+  data: getUserPreviewDataSchema,
+});
+
+const getCurrentUserPreviewSchema = z.object({
+  type: z.literal("current"),
+});
+
+const getComparedUserPreviewSchema = z.object({
+  type: z.literal("compare"),
+  data: getUserPreviewDataSchema,
+});
+
+export const getUserPreviewSchema = z.object({
+  payload: z.discriminatedUnion("type", [getNewUserPreviewSchema, getCurrentUserPreviewSchema, getComparedUserPreviewSchema]),
+});
 
 export type GetUserPreviewSchema = z.infer<typeof getUserPreviewSchema>;
 

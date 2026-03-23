@@ -31,8 +31,14 @@ export class PermissionTablesService {
     return await this.permissionTableModel.find();
   }
 
-  async getPermissionTableById(id: ObjectId): Promise<WithId<PermissionTable> | null> {
-    return await this.permissionTablesCollection.findOne({ _id: id });
+  async getPermissionTableById(id: ObjectId): Promise<WithId<PermissionTable>> {
+    const permissionTable = await this.permissionTablesCollection.findOne({ _id: id });
+
+    if (!permissionTable) {
+      throw new NotFoundException(`Permission table with id ${id} not found`);
+    }
+
+    return permissionTable;
   }
 
   async getPermissionTablesByIds(

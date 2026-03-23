@@ -8,6 +8,8 @@ import z, {
   ZodArray,
   ZodBranded,
   ZodDefault,
+  ZodDiscriminatedUnion,
+  ZodDiscriminatedUnionOption,
   ZodEffects,
   ZodNullable,
   ZodObject,
@@ -16,7 +18,6 @@ import z, {
   ZodType,
   ZodTypeAny,
   ZodUnion,
-  ZodUnionOptions,
 } from "zod";
 import { ObjectIdBrand, OBJECT_ID_DESC } from "@port/shield-schemas";
 
@@ -128,10 +129,15 @@ const applyObjectIdTransforms = (schema: ZodTypeAny): ZodTypeAny => {
 
   if (schema instanceof ZodUnion && Array.isArray(schema._def.options)) {
     const options = schema._def.options.map(applyObjectIdTransforms);
-    return new ZodUnion({
-      ...schema._def,
-      options: options as unknown as ZodUnionOptions,
-    });
+    return z.union(options as unknown as [ZodTypeAny, ZodTypeAny, ...ZodTypeAny[]]);
+  }
+
+  if (schema instanceof ZodDiscriminatedUnion && Array.isArray(schema._def.options)) {
+    const options = schema._def.options.map(applyObjectIdTransforms);
+    return z.discriminatedUnion(
+      schema._def.discriminator,
+      options as unknown as [ZodDiscriminatedUnionOption<any>, ...ZodDiscriminatedUnionOption<any>[]],
+    );
   }
 
   if (schema instanceof ZodBranded && schema.description === OBJECT_ID_DESC) {

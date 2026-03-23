@@ -19,9 +19,8 @@ import {
 import { ObjectId } from "mongodb";
 import { createZodDto } from "nestjs-zod";
 import { RowFilter } from "src/permission_tables/permission_tables.classes";
-import { objectIdToString, toMongoObjectId, TransformToMongoObjectId, withObjectIdTransform } from "src/utils/mongo.utils";
+import { objectIdToString, TransformToMongoObjectId, withObjectIdTransform } from "src/utils/mongo.utils";
 import { IsNotEmptyString, IsObjectType } from "src/utils/validation/validation.decorators";
-import z from "zod";
 
 export type UserType = (typeof userTypes)[number];
 

@@ -6,9 +6,9 @@ import { FORM_DATA_JSON_BODY, FILE_NAME } from "../utils/constants";
 import { ContactUsConsts } from "../utils/validation/validation.constants";
 import { shouldValidateContactField } from "../utils/validation/validation.functions";
 
-type ContactFields = "customfield_14200" | "summary" | "customfield_11502" | "customfield_10706" | "attachment" | "description";
+export type ContactFields = "customfield_14200" | "summary" | "customfield_11502" | "customfield_10706" | "attachment" | "description";
 
-class ValidValues {
+export class ValidValues {
   @IsString()
   value: string;
 

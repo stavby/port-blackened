@@ -69,6 +69,7 @@ import { isMongoDuplicateKeyError } from "src/utils/mongo.utils";
 import { customDiff } from "src/utils/utils";
 import { PermissionGroupDiff } from "../permission_groups/permission_groups.interface";
 import {
+  ZGetUserPreviewDto,
   User,
   UserAttributes,
   UserDomain,
@@ -78,7 +79,6 @@ import {
   UserRowFilterValue,
   ZFilterUsersDto,
   ZGetTableColumnDictDto,
-  ZGetUserPreviewDto,
 } from "./user.classes";
 import { DEFAULT_USER_ATTRIBUTES_SERVER, DEFAULT_USER_CATALOGS, SAP_INTERNAL_COLUMN_NAME, SAP_SOURCE_TYPE } from "./user.constants";
 import {
@@ -1850,7 +1850,14 @@ export class UserService {
           !(await this.openFgaService.isApiUser(domainDiff.last_changed_by))
         ) {
           lockedDomains.push({ id: domainDiff.id, classifications: domainDiff.classifications, operation: "update" });
-          const uneditedUserDomain = uneditedUserDomains!.find(({ id }) => id.equals(domain.id))!;
+          const uneditedUserDomain = uneditedUserDomains!.find(({ id }) => id.equals(domain.id));
+
+          if (!uneditedUserDomain) {
+            throw new NotFoundException(
+              `Domain with id ${domain.id} was not found in unedited user domains despite being in the diff as updated`,
+            );
+          }
+
           finalDomains.push({ id: uneditedUserDomain.id, classifications: uneditedUserDomain.classifications });
         } else {
           finalDomains.push(domain);
@@ -1866,7 +1873,14 @@ export class UserService {
           !(await this.openFgaService.isApiUser(domainDiff.last_changed_by))
         ) {
           lockedDomains.push({ id: domainDiff.id, classifications: domainDiff.classifications, operation: "delete" });
-          const uneditedUserDomain = uneditedUserDomains!.find(({ id }) => id.equals(domainDiff.id))!;
+          const uneditedUserDomain = uneditedUserDomains!.find(({ id }) => id.equals(domainDiff.id));
+
+          if (!uneditedUserDomain) {
+            throw new NotFoundException(
+              `Domain with id ${domainDiff.id} was not found in unedited user domains despite being in the diff as deleted`,
+            );
+          }
+
           finalDomains.push({ id: uneditedUserDomain.id, classifications: uneditedUserDomain.classifications });
         }
       }),
@@ -2623,7 +2637,7 @@ export class UserService {
     return type === "full" ? this.opaApi.getUserLivePermissions(payload) : this.opaApi.getUserPermissionsByTableAndUser(table!, payload);
   }
 
-  async getLiveTablesByUser(userId: UserID, { type, data }: ZGetUserPreviewDto): Promise<ZTablePreviewDto[]> {
+  async getLiveTablesByUser(userId: UserID, { payload }: ZGetUserPreviewDto): Promise<ZTablePreviewDto[]> {
     const tablesProj = [
       "_id",
       "columns_dict",
@@ -2636,7 +2650,7 @@ export class UserService {
       "source_type",
     ] as const satisfies (keyof WithId<MongooseTable>)[];
 
-    if (type === "current") {
+    if (payload.type === "current") {
       const opaTables = await this.getUserDataPermissionsByUserId(userId, "full");
       const opaTablesMap = new Map(opaTables.map((table) => [formatRawStandardTable(table), { ...table }]));
       const tables = await this.tableService.getTablesByTableFullNames([...opaTablesMap.keys()], tablesProj);
@@ -2656,14 +2670,14 @@ export class UserService {
           shieldCount,
         };
       });
-    } else if (type === "new" && data) {
-      const domains = this.toUserDomainsDict(data);
+    } else if (payload.type === "new") {
+      const domains = this.toUserDomainsDict(payload.data);
       const opaTables = await this.opaApi.getUserLivePermissions({
         user_id: userId,
         catalogs: {
           [DATALAKE_CATALOG_NAME]: {
             ...DEFAULT_USER_CATALOGS.datalake,
-            read_all: data.is_read_all,
+            read_all: payload.data.is_read_all,
           },
         },
         domains,
@@ -2688,14 +2702,14 @@ export class UserService {
         };
       });
     } else {
-      const domains = this.toUserDomainsDict(data!);
+      const domains = this.toUserDomainsDict(payload.data);
       const [opaNewTables, opaCurrTables] = await Promise.all([
         this.opaApi.getUserLivePermissions({
           user_id: userId,
           catalogs: {
             [DATALAKE_CATALOG_NAME]: {
               ...DEFAULT_USER_CATALOGS.datalake,
-              read_all: data!.is_read_all,
+              read_all: payload.data.is_read_all,
             },
           },
           domains,
@@ -2762,7 +2776,7 @@ export class UserService {
     return filteredColumnsDict;
   }
 
-  async getLiveColumnsByTable(userId: UserID, table: StandardTable, { type, data }: ZGetUserPreviewDto): Promise<ZGetTableColumnDictDto> {
+  async getLiveColumnsByTable(userId: UserID, table: StandardTable, { payload }: ZGetUserPreviewDto): Promise<ZGetTableColumnDictDto> {
     const GET_TABLE_WITH_CLASSIFICATION_NAME = [
       {
         $match: {
@@ -2846,17 +2860,17 @@ export class UserService {
 
     let columnsWithStatus: ColumnWithStatus[] = [];
 
-    if (type === "current") {
+    if (payload.type === "current") {
       const columns = await this.getUserDataPermissionsByUserId(userId, "table", table);
       columnsWithStatus = columns.map((col) => ({ column_name: col }));
-    } else if (type === "new") {
-      const domains = this.toUserDomainsDict(data!);
+    } else if (payload.type === "new") {
+      const domains = this.toUserDomainsDict(payload.data!);
       const columns = await this.opaApi.getUserPermissionsByTableAndUser(table, {
         user_id: userId,
         catalogs: {
           [DATALAKE_CATALOG_NAME]: {
             ...DEFAULT_USER_CATALOGS.datalake,
-            read_all: data!.is_read_all,
+            read_all: payload.data.is_read_all,
           },
         },
         domains: domains,
@@ -2864,14 +2878,14 @@ export class UserService {
 
       columnsWithStatus = columns.map((col) => ({ column_name: col, is_new: true }));
     } else {
-      const domains = this.toUserDomainsDict(data!);
+      const domains = this.toUserDomainsDict(payload.data);
       const [newColumns, currColumns] = await Promise.all([
         this.opaApi.getUserPermissionsByTableAndUser(table, {
           user_id: userId,
           catalogs: {
             [DATALAKE_CATALOG_NAME]: {
               ...DEFAULT_USER_CATALOGS.datalake,
-              read_all: data!.is_read_all,
+              read_all: payload.data.is_read_all,
             },
           },
           domains: domains,

@@ -38,14 +38,11 @@ export class AuthController {
   @UseGuards(new DirectAccessGrantGuard())
   @Post("auth/login/direct")
   async directAccessGrant(@AuthenticatedUser() grant: Grant) {
-    // necessary usage of any cast due to incorrect types in keycloak-connect package
-    const token = (grant?.access_token as any)?.["token"];
-
-    if (!token) {
+    if (!grant.access_token || !("token" in grant.access_token) || typeof grant.access_token.token !== "string") {
       throw new InternalServerErrorException("Failed to obtain access token using direct access grant");
     }
 
-    return token;
+    return grant.access_token.token;
   }
 
   @OIDCPublic()
