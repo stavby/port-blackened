@@ -68,6 +68,10 @@ CLASS_PUBLIC_DATA_ID="66f000000000000000000001"
 CLASS_PII_ID="66f000000000000000000002"
 CLASS_FINANCIAL_ID="66f000000000000000000003"
 
+PERM_GRP_ANALYTICS_READERS_ID="66f000000000000000000041"
+PERM_GRP_SALES_READERS_ID="66f000000000000000000042"
+PERM_GRP_PUBLIC_READERS_ID="66f000000000000000000043"
+
 echo "Seeding platform->domain tuples ..."
 for DOMAIN_ID in "$DOMAIN_PUBLIC_ID" "$DOMAIN_ANALYTICS_ID" "$DOMAIN_SALES_ID"; do
   echo "  -> platform:global platform domain:$DOMAIN_ID"
@@ -88,6 +92,19 @@ fga tuple write --api-url "$FGA_API_URL" --store-id "$STORE_ID" --on-duplicate i
 fga tuple write --api-url "$FGA_API_URL" --store-id "$STORE_ID" --on-duplicate ignore domain:$DOMAIN_SALES_ID domain domain_classification:${DOMAIN_SALES_ID}-${CLASS_PUBLIC_DATA_ID}
 fga tuple write --api-url "$FGA_API_URL" --store-id "$STORE_ID" --on-duplicate ignore domain:$DOMAIN_SALES_ID domain domain_classification:${DOMAIN_SALES_ID}-${CLASS_PII_ID}
 fga tuple write --api-url "$FGA_API_URL" --store-id "$STORE_ID" --on-duplicate ignore domain:$DOMAIN_SALES_ID domain domain_classification:${DOMAIN_SALES_ID}-${CLASS_FINANCIAL_ID}
+
+# ---------------------------------------------------------------------------
+# 5. Seed permission_group tuples (mongo IDs from seed-mock-data.js)
+# ---------------------------------------------------------------------------
+echo "Seeding platform->permission_group tuples ..."
+for PERM_GRP_ID in "$PERM_GRP_ANALYTICS_READERS_ID" "$PERM_GRP_SALES_READERS_ID" "$PERM_GRP_PUBLIC_READERS_ID"; do
+  echo "  -> platform:global platform permission_group:$PERM_GRP_ID"
+  fga tuple write \
+    --api-url      "$FGA_API_URL" \
+    --store-id     "$STORE_ID"   \
+    --on-duplicate ignore         \
+    platform:global platform permission_group:$PERM_GRP_ID
+done
 
 echo ""
 echo "Bootstrap complete."
