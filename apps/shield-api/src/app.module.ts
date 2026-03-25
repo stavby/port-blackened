@@ -66,7 +66,7 @@ import { AdminModule } from "./admin/admin.module";
     OpenFgaModule,
     PermissionGroupsModule,
     AdminModule,
-    MongooseModule.forRoot(process.env.MONGODB_CONNECTION_STRING),
+    MongooseModule.forRoot(process.env.MONGODB_CONNECTION_STRING!),
   ],
   controllers: [AppController],
   // register auth guard globally

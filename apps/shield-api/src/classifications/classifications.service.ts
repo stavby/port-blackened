@@ -210,6 +210,10 @@ export class ClassificationsService {
         .collection<Classification>("classifications")
         .findOneAndUpdate({ _id: id }, { $set: { name: name, description: description } }, { returnDocument: "before" });
 
+      if (!currentClassification) {
+        throw new HttpException(`Classification not found with id ${id}`, HttpStatus.NOT_FOUND);
+      }
+
       this.auditingService.insertLegacyAudit({
         user_id: userId,
         operation: OP.Update,

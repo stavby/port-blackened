@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Put, Query, Res, UseGuards } from "@nestjs/common";
-import { ApiOperation, ApiParam } from "@nestjs/swagger";
+import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { UserID } from "@port/common-schemas";
 import { Response } from "express";
 import { ObjectId, UpdateResult } from "mongodb";
@@ -34,6 +34,7 @@ import {
 } from "./users.dto";
 
 @Controller("users")
+@ApiTags("Users")
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

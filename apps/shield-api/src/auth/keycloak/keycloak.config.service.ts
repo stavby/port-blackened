@@ -13,7 +13,7 @@ export class KeycloakConfigService implements KeycloakConnectOptionsFactory {
       authServerUrl: this.configService.get("keycloak.url", { infer: true }),
       realm: this.configService.get("keycloak.realm", { infer: true }),
       clientId: this.configService.get("keycloak.clientId", { infer: true }),
-      secret: this.configService.get("keycloak.clientSecret", { infer: true }),
+      secret: this.configService.get("keycloak.clientSecret", { infer: true })!,
       cookieKey: COOKIE_KEY,
       tokenValidation: TokenValidation.ONLINE,
     };

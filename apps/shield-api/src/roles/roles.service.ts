@@ -3,7 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { FGARelation } from "@port/openfga-client";
 import { Role as MongooseRole } from "@port/shield-models";
 import { NON_ADMIN_ROLE_NAMES, ROLE_NAME, RoleName } from "@port/shield-schemas";
-import { ObjectId, WithId } from "mongodb";
+import { WithId } from "mongodb";
 import { Model } from "mongoose";
 import { Role } from "./roles.classes";
 import { getRolesDtoWithObjectIdTransform, ZGetRolesDto, ZGetRolesFgaPermissionMappingDto } from "./roles.dto";
@@ -11,10 +11,6 @@ import { getRolesDtoWithObjectIdTransform, ZGetRolesDto, ZGetRolesFgaPermissionM
 @Injectable()
 export class RolesService {
   constructor(@InjectModel(MongooseRole.name) private readonly roleModel: Model<MongooseRole>) {}
-
-  async getRoleById(roleID: ObjectId): Promise<WithId<Role>> {
-    return await this.roleModel.findOne({ _id: roleID }).exec();
-  }
 
   async getRoleByName(roleName: string): Promise<WithId<Role> | null> {
     return await this.roleModel.findOne({ name: roleName }).exec();

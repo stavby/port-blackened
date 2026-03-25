@@ -3,7 +3,7 @@ import axios, { AxiosError, AxiosInstance, AxiosResponse } from "axios";
 import { Agent } from "https";
 import { Readable } from "stream";
 import { ContactUser } from "./contactUs.interfaces";
-import { ContactRequest, RequestType } from "./contactUs.models";
+import { ContactFields, ContactRequest, RequestType, ValidValues } from "./contactUs.models";
 import { readServerFile } from "@port/server-files";
 import { IORedis } from "src/redis/ioredis";
 import { REDIS_KEYS } from "src/redis/ioredis.keys";
@@ -90,27 +90,45 @@ export class ContactUsService {
       const redisValue = await this.ioredis.get(REDIS_KEYS.JIRA_CONTACT_TYPES);
       if (redisValue) return JSON.parse(redisValue);
 
-      const res = await this.jira_api.get(`rest/servicedeskapi/servicedesk/${this.jira_desk}/requesttype`, {
+      const res = await this.jira_api.get<
+        | {
+            values: {
+              id: string;
+              name: string;
+            }[];
+          }
+        | undefined
+      >(`rest/servicedeskapi/servicedesk/${this.jira_desk}/requesttype`, {
         params: { limit: 100, groupId: this.jira_group },
       });
 
       const request_types: RequestType[] = await Promise.all(
         res.data?.values.map(async (request_type): Promise<RequestType> => {
-          const fieldsRes = await this.jira_api.get(
-            `rest/servicedeskapi/servicedesk/${this.jira_desk}/requesttype/${request_type.id}/field`,
-          );
+          const fieldsRes = await this.jira_api.get<
+            | {
+                requestTypeFields?: {
+                  fieldId: ContactFields;
+                  name: string;
+                  jiraSchema?: { type: string };
+                  required: boolean;
+                  validValues?: ValidValues[];
+                }[];
+              }
+            | undefined
+          >(`rest/servicedeskapi/servicedesk/${this.jira_desk}/requesttype/${request_type.id}/field`);
           return {
             id: request_type.id,
             name: request_type.name,
-            fields: (fieldsRes.data?.requestTypeFields as any[] | undefined)?.map<RequestType["fields"][number]>((field) => ({
-              fieldId: field.fieldId,
-              name: field.name,
-              type: field.jiraSchema?.type,
-              required: field.required,
-              validValues: field.validValues,
-            })),
+            fields:
+              fieldsRes.data?.requestTypeFields?.map<RequestType["fields"][number]>((field) => ({
+                fieldId: field.fieldId,
+                name: field.name,
+                type: field.jiraSchema?.type ?? "unknown",
+                required: field.required,
+                validValues: field.validValues ?? [],
+              })) ?? [],
           };
-        }),
+        }) ?? [],
       );
 
       this.ioredis.set(REDIS_KEYS.JIRA_CONTACT_TYPES, JSON.stringify(request_types), "EX", 60 * 60);

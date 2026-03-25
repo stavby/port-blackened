@@ -11,7 +11,7 @@ import { DB_CONNECTION_PROVIDER } from "src/utils/constants";
         try {
           Logger.log("Connecting to MongoDB...");
 
-          const connectionString = configService.get<string>("mongodb.connectionString");
+          const connectionString = configService.get<string>("mongodb.connectionString")!;
           const client = await MongoClient.connect(connectionString);
           // BLACKEND
           // return client.db("shield-db");

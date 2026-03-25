@@ -638,7 +638,7 @@ export class ApplicationUsersService {
     };
   }
 
-  async getLoggedUserPermissionsDisplay(loggedUser: LoggedUser): Promise<ZGetLoggedUserPermissionsDisplayDto | null> {
+  async getLoggedUserPermissionsDisplay(loggedUser: LoggedUser): Promise<ZGetLoggedUserPermissionsDisplayDto> {
     const users = await this.applicationUserModel
       .aggregate<
         Pick<MongooseApplicationUser, "is_admin"> & {
@@ -1085,7 +1085,7 @@ export class ApplicationUsersService {
           deletedRoles: [],
         })),
         applicationUserIndicationsDiff: applicationUserBooleanAttributes.reduce<ApplicationUserIndicationDiff[]>((acc, attribute) => {
-          if (applicationUser[attribute] === true) {
+          if (applicationUser[booleanAttributeNameToSnakeCase[attribute]] === true) {
             acc.push({
               action_type: "ON",
               kind: booleanAttributeNameToSnakeCase[attribute],
@@ -1102,6 +1102,10 @@ export class ApplicationUsersService {
       const aggregation = [{ $match: { _id: result._id } }, ...APPLICATION_USER_DATA_PIPELINE] as const satisfies PipelineStage[];
 
       const [newApplicationUser] = await this.applicationUserModel.aggregate<ApplicationUserData>(aggregation).exec();
+
+      if (!newApplicationUser) {
+        throw new InternalServerErrorException(`Could not find newly created application user with id ${result._id}`);
+      }
 
       return this.formatApplicationUserDataToListDto(newApplicationUser);
     });
@@ -1145,6 +1149,12 @@ export class ApplicationUsersService {
       ] as const satisfies PipelineStage[];
 
       const [updatedApplicationUser] = await this.applicationUserModel.aggregate<ApplicationUserData>(aggregation).exec();
+
+      if (!updatedApplicationUser) {
+        throw new InternalServerErrorException(
+          `Could not find application user with id ${currentMongoApplicationUser._id} after skipping update due to no changes`,
+        );
+      }
 
       return this.formatApplicationUserDataToListDto(updatedApplicationUser);
     }
@@ -1272,6 +1282,10 @@ export class ApplicationUsersService {
     ] as const satisfies PipelineStage[];
 
     const [updatedApplicationUser] = await this.applicationUserModel.aggregate<ApplicationUserData>(aggregation).exec();
+
+    if (!updatedApplicationUser) {
+      throw new InternalServerErrorException(`Could not find application user with id ${currentMongoApplicationUser._id} after update`);
+    }
 
     return this.formatApplicationUserDataToListDto(updatedApplicationUser);
   }

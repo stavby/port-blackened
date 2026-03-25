@@ -225,20 +225,20 @@ export const useAddPermissionGroupToUsers = (
   });
 };
 
-export const getLiveTablesByUser = async (userId: UserID, user_attributes: GetUserPreviewSchema) => {
-  const { data } = await axios.post<TablePreviewDto[]>(GET_LIVE_TABLES_BY_USER_ENDPOINT(userId), user_attributes);
+export const getLiveTablesByUser = async (userId: UserID, payload: GetUserPreviewSchema["payload"]) => {
+  const { data } = await axios.post<TablePreviewDto[]>(GET_LIVE_TABLES_BY_USER_ENDPOINT(userId), { payload });
 
   return data;
 };
 
 export const useGetLiveTablesByUser = (
   userId: UserID,
-  user_attributes: GetUserPreviewSchema,
+  payload: GetUserPreviewSchema["payload"],
   queryOptions?: OverridableQueryOptions<TablePreviewDto[]>,
 ) => {
   return useQuery({
-    queryKey: ["user", "liveTablesByUser", userId, user_attributes.data],
-    queryFn: () => getLiveTablesByUser(userId, user_attributes),
+    queryKey: ["user", "liveTablesByUser", userId, payload],
+    queryFn: () => getLiveTablesByUser(userId, payload),
     meta: {
       loading: false,
     },
@@ -275,8 +275,8 @@ export const useGetUsersByPermissionGroup = (
   });
 };
 
-export const getLiveColumnsByTable = async (userId: string, table: StandardTable, payload?: GetUserPreviewSchema) => {
-  const { data } = await axios.post<ColumnsDictPreviewDto>(GET_LIVE_COLUMNS_BY_TABLE_ENDPOINT(userId, table), payload);
+export const getLiveColumnsByTable = async (userId: string, table: StandardTable, payload: GetUserPreviewSchema["payload"]) => {
+  const { data } = await axios.post<ColumnsDictPreviewDto>(GET_LIVE_COLUMNS_BY_TABLE_ENDPOINT(userId, table), { payload });
 
   return data;
 };
@@ -284,12 +284,12 @@ export const getLiveColumnsByTable = async (userId: string, table: StandardTable
 export const useGetLiveColumnsByTable = (
   userId: string,
   table: StandardTable,
-  user_attributes: GetUserPreviewSchema,
+  payload: GetUserPreviewSchema["payload"],
   queryOptions?: OverridableQueryOptions<ColumnsDictPreviewDto>,
 ) => {
   return useQuery({
-    queryKey: ["user", "liveColumnsByTable", userId, "table", table.tableName, table.tableSchema, user_attributes],
-    queryFn: () => getLiveColumnsByTable(userId, table, user_attributes),
+    queryKey: ["user", "liveColumnsByTable", userId, "table", table.tableName, table.tableSchema, payload],
+    queryFn: () => getLiveColumnsByTable(userId, table, payload),
     meta: {
       loading: false,
     },

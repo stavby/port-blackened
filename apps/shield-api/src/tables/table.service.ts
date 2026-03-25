@@ -53,7 +53,7 @@ import { TrinoService } from "src/trino/trino.service";
 import { KEYCLOAK_ADMIN_PROVIDE } from "src/user-info/keycloak-admin.provider";
 import { GetUserInfoDto } from "src/user-info/user-info.interface";
 import { DB_CONNECTION_PROVIDER, INTERNAL_RESOURCE_ID } from "src/utils/constants";
-import { customDiff, formatRawStandardTable, parseRawTable } from "src/utils/utils";
+import { customDiff, formatRawStandardTable, parseRawTable, ShieldStandardTable } from "src/utils/utils";
 import {
   ColumnsDict,
   EditableColumnAttrs,
@@ -255,7 +255,7 @@ export class TableService {
       .find({
         $expr: { $in: [{ $concat: ["$schema_name", ".", "$table_name"] }, [...tableNames]] },
       })
-      .select(projection)
+      .select(projection ?? {})
       .lean();
 
     return tables;
@@ -312,7 +312,7 @@ export class TableService {
 
       const upstreamTables = await this.tableModel.find(
         {
-          $or: lineage.upstreams.reduce((acc, up) => {
+          $or: lineage.upstreams.reduce<ShieldStandardTable[]>((acc, up) => {
             const table = parseRawTable(up.tableName);
             if (table) acc.push(table);
             return acc;
@@ -351,7 +351,14 @@ export class TableService {
         .then(
           ({ result }) =>
             new Map(
-              result.map(({ allowed, request }) => [OpenFgaService.extractDomainClassification(request.object).classification, allowed]),
+              result.reduce<[string, boolean][]>((acc, { allowed, request }) => {
+                const classification = OpenFgaService.extractDomainClassification(request.object)?.classification;
+
+                if (classification) {
+                  acc.push([classification, allowed]);
+                }
+                return acc;
+              }, []),
             ),
         );
 
@@ -451,13 +458,13 @@ export class TableService {
   ): GetTableDto {
     const transformedColumnsDict = Object.values(table.columns_dict).reduce<GetTableDto["columns_dict"]>(
       (transformedColumnsDict, currColumn) => {
-        const data_type = currColumn.attributes.data_type?.split("(")[0].toUpperCase();
+        const data_type = currColumn.attributes.data_type?.split("(")?.[0]?.toUpperCase() ?? "unknown";
 
         transformedColumnsDict[currColumn.column_name] = {
           ...currColumn,
           attributes: {
             ...currColumn.attributes,
-            data_type_hebrew: dbTypeMapping[data_type] ?? data_type,
+            data_type_hebrew: data_type in dbTypeMapping ? dbTypeMapping[data_type as keyof typeof dbTypeMapping] : data_type,
           },
         };
 
@@ -542,9 +549,12 @@ export class TableService {
         { $replaceRoot: { newRoot: { $arrayToObject: "$result" } } },
       ])
       .toArray();
-    if (tables.length < 1) throw new NotFoundException("No schemas found");
 
-    return tables[0];
+    const schemasDict = tables[0];
+
+    if (!schemasDict) throw new NotFoundException("No schemas found");
+
+    return schemasDict;
   }
 
   /**
@@ -556,7 +566,7 @@ export class TableService {
     columnDict: EditableColumnsDict,
     userId: UserID,
     tableDiff: (ColumnDictDiff | TableVerificationStageDiff | TableFullVerificationDiff)[],
-    verification_stages: VerificationStage[],
+    verification_stages: VerificationStage[] | undefined,
   ) {
     const wasVerified = !!tableDiff.find((diff) => diff.kind === "full_verification" && diff.newValue);
     const wasUnverified = !!tableDiff.find((diff) => diff.kind === "full_verification" && !diff.newValue);
@@ -659,7 +669,7 @@ export class TableService {
   async editTableById(
     tableId: ObjectId,
     editColumnsDict: EditableColumnsDict,
-    verification_stages: VerificationStage[],
+    verification_stages: VerificationStage[] | undefined,
     loggedUser: LoggedUser,
   ): Promise<void> {
     const table = await this.getTableById(tableId);
@@ -704,7 +714,7 @@ export class TableService {
     });
 
     const verificationDiff = getVerificationDiff(table.verification_stages, verification_stages);
-    const fullVerificationDiff = getFullVerificationDiff(table.verification_stages, verification_stages);
+    const fullVerificationDiff = getFullVerificationDiff(table.verification_stages ?? [], verification_stages ?? []);
 
     const { result } = await this.openFgaService.batchCheck({ checks });
     result.forEach((result) => {
@@ -782,7 +792,7 @@ export class TableService {
 
   async refreshSapTables() {
     const currentTablesInMongo = await this.getSapTables();
-    const currentTablesInMongoMap = {};
+    const currentTablesInMongoMap: Record<string, boolean> = {};
     currentTablesInMongo.forEach(({ schema_name, table_name }) => {
       currentTablesInMongoMap[this.getFullTableName(schema_name, table_name)] = true;
     });
@@ -793,7 +803,7 @@ export class TableService {
     FROM mock_sap_tables 
   `;
     const tablesInTrino = await this.trinoService.query<{ schema_name: string; table_name: string }>(query);
-    const tablesInTrinoMap = {};
+    const tablesInTrinoMap: Record<string, boolean> = {};
     tablesInTrino.forEach(({ schema_name, table_name }) => {
       tablesInTrinoMap[this.getFullTableName(schema_name, table_name)] = true;
     });
@@ -833,7 +843,7 @@ export class TableService {
           attributes: {
             data_type,
             column_display_name,
-            column_desc,
+            column_desc: column_desc || "",
             is_key,
             ...(overrideAttributes || {}),
           },
@@ -881,9 +891,8 @@ export class TableService {
     return Object.values(nextColumnDict).reduce<ClassificationStateEvent["columns_tag_diff"]>((acc, column) => {
       const diff: ClassificationStateEvent["columns_tag_diff"][string] = { add: [], remove: [] };
 
-      const previousClassification = prevColumnDict[column.column_name]?.attributes.classification
-        ? classificationsByIds.get(prevColumnDict[column.column_name].attributes.classification.toString())
-        : undefined;
+      const previousClassificationId = prevColumnDict[column.column_name]?.attributes.classification?.toString();
+      const previousClassification = previousClassificationId ? classificationsByIds.get(previousClassificationId) : undefined;
 
       const previousMask = prevColumnDict[column.column_name]?.attributes.mask;
 
@@ -907,7 +916,7 @@ export class TableService {
         if (previousMask) {
           const tag = this.getMaskingTag(previousMask);
 
-          if (tag) diff.remove.push(this.getMaskingTag(previousMask));
+          if (tag) diff.remove.push(tag);
         }
 
         if (nextMask) {
@@ -1055,7 +1064,7 @@ export class TableService {
     // all matching by indexes
     const tablesMetadata: {
       table: Document<mongoose.Types.ObjectId, object, MongooseTable> & MongooseTable;
-      prevTable: Document<unknown, object, MongooseTable> & MongooseTable;
+      prevTable: (Document<unknown, object, MongooseTable> & MongooseTable) | null;
       taskOperation: TaskOperationKind | null;
       upsertTableData: UpsertTableWithOwner;
     }[] = [];
@@ -1080,7 +1089,8 @@ export class TableService {
       } = upsertTableData;
       const tableName = formatRawStandardTable({ table_name, schema_name });
 
-      if (!domainsById[domain_id]) {
+      const domain = domainsById[domain_id];
+      if (!domain) {
         response.push({
           table_name,
           schema_name,
@@ -1125,8 +1135,8 @@ export class TableService {
           permission_table_id && permission_key && permission_key_column ? new Map([[permission_key, permission_key_column]]) : new Map(),
         attributes: {
           domain_id: new ObjectId(domain_id),
-          domain: domainsById[domain_id].name,
-          display_name: domainsById[domain_id].display_name,
+          domain: domain.name,
+          display_name: domain.display_name,
         },
         schedule_type: extraTableData.application === "connect" ? "cron" : extraTableData.schedule_type,
         schedule: extraTableData.application === "connect" || extraTableData.schedule_type === "cron" ? extraTableData.schedule : undefined,
@@ -1135,7 +1145,7 @@ export class TableService {
         ...(extraTableData.application === "remix" || extraTableData.application === "external"
           ? {
               query: extraTableData.query,
-              updating_dependencies: extraTableData.updating_dependencies,
+              updating_dependencies: extraTableData.updating_dependencies ?? [],
             }
           : {}),
         is_deprecated: false,
@@ -1181,7 +1191,7 @@ export class TableService {
                     const baseAttr = {
                       data_type,
                       column_display_name,
-                      column_desc,
+                      column_desc: column_desc ?? "",
                       is_key,
                     };
 
@@ -1264,7 +1274,8 @@ export class TableService {
               "upsert-dataset",
               upsertTableToSpyglassEvent({
                 ...upsertTableData,
-                domain_display_name: domainsById[upsertTableData.domain_id].display_name,
+                // checked the existence of the domain in the beginning of the function, so we can assert it exists here
+                domain_display_name: domainsById[upsertTableData.domain_id]!.display_name,
                 owner: {
                   id: keycloakOwnersByUserId[upsertTableData.owner.id]?.preferred_username ?? upsertTableData.owner.id,
                   name: upsertTableData.owner.name,

@@ -32,7 +32,13 @@ export class PermissionTablesService {
   }
 
   async getPermissionTableById(id: ObjectId): Promise<WithId<PermissionTable>> {
-    return await this.permissionTablesCollection.findOne({ _id: id });
+    const permissionTable = await this.permissionTablesCollection.findOne({ _id: id });
+
+    if (!permissionTable) {
+      throw new NotFoundException(`Permission table with id ${id} not found`);
+    }
+
+    return permissionTable;
   }
 
   async getPermissionTablesByIds(
@@ -61,13 +67,26 @@ export class PermissionTablesService {
 
     const dataTree: RowFilterTreeValueDto[] = [];
 
-    data.forEach((value) => {
-      if (value.parent) {
-        hashTable[value.parent].children.push(hashTable[value.value]);
-      } else {
-        dataTree.push(hashTable[value.value]);
+    for (const value of data) {
+      const hashTableValue = hashTable[value.value];
+
+      if (!hashTableValue) {
+        this.logger.error(`Value with id ${value.value} not found in hashTable`);
+        continue;
       }
-    });
+
+      if (value.parent) {
+        const hashTableParent = hashTable[value.parent];
+
+        if (!hashTableParent) {
+          this.logger.error(`Parent with id ${value.parent} not found for value with id ${value.value}`);
+          continue;
+        }
+        hashTableParent.children.push(hashTableValue);
+      } else {
+        dataTree.push(hashTableValue);
+      }
+    }
 
     return dataTree;
   }
@@ -107,7 +126,7 @@ export class PermissionTablesService {
         );
       }
 
-      const [row_filter] = permissionTable.row_filter;
+      const row_filter = permissionTable.row_filter[0]!;
 
       const redisKey = REDIS_KEYS.TRINO_DIMENSIONS_TABLE_VALUES(row_filter.dimensions_table);
       const redisValue = await this.ioredis.get(redisKey);
@@ -232,7 +251,7 @@ export class PermissionTablesService {
     }, {});
 
     freshRowFilterValues.forEach((rowFilterValue) => {
-      formattedFreshRowFilterValues[rowFilterValue.dimensions_table].push({
+      formattedFreshRowFilterValues[rowFilterValue.dimensions_table]?.push({
         value: rowFilterValue.value,
         display_name: rowFilterValue.display_name,
         parent: "parent" in rowFilterValue ? rowFilterValue.parent : undefined,

@@ -23,16 +23,21 @@ export class TrinoService {
     const rows: Row[] = [];
 
     for await (const queryResult of queryResultIterator) {
-      if (queryResult.stats.state === FAILED_STATE) {
+      if (queryResult.stats?.state === FAILED_STATE) {
         throw queryResult.error;
       }
+
+      if (!queryResult.columns) {
+        throw new HttpException("Trino query did not return columns", HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+      const columns = queryResult.columns;
 
       queryResult.data?.forEach((rowArray) =>
         rows.push(
           rowArray.reduce<Row>(
             (row, value, index): Row => ({
               ...row,
-              [queryResult.columns[index].name]: value,
+              [columns[index]!.name]: value,
             }),
             {} as Row,
           ),
@@ -65,7 +70,7 @@ export class TrinoService {
 
     const data: QueryData[] = await iter
       .map((r) => {
-        if (r.stats.state == "FAILED") throw `Error in Trino query execute: ${r.error.message}`;
+        if (r.stats?.state == "FAILED") throw `Error in Trino query execute: ${r.error?.message}`;
         return r.data ?? [];
       })
       .fold<QueryData[]>([], (row, acc) => [...acc, ...row]);
