@@ -1,5 +1,5 @@
 {
-  "id": "7ab3ca61-c3df-43ce-a8d7-e279b1a1a537",
+  "id": "7f1410e7-7dd3-49ed-a43e-09d6766769d5",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -10,12 +10,6 @@
       "columns": {
         "application_user_domain_id": {
           "name": "application_user_domain_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "domain_id": {
-          "name": "domain_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -47,29 +41,12 @@
           "tableFrom": "application_user_domain_classifications",
           "tableTo": "application_user_domains",
           "columnsFrom": [
-            "application_user_domain_id",
-            "domain_id"
+            "application_user_domain_id"
           ],
           "columnsTo": [
-            "id",
-            "domain_id"
+            "id"
           ],
           "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "app_usr_dom_cls_fk_dc": {
-          "name": "app_usr_dom_cls_fk_dc",
-          "tableFrom": "application_user_domain_classifications",
-          "tableTo": "domain_classifications",
-          "columnsFrom": [
-            "domain_id",
-            "classification_id"
-          ],
-          "columnsTo": [
-            "domain_id",
-            "classification_id"
-          ],
-          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
@@ -283,8 +260,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "last_changed_by": {
-          "name": "last_changed_by",
+        "last_updated_by": {
+          "name": "last_updated_by",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -327,6 +304,59 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.audit_log_changes": {
+      "name": "audit_log_changes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "audit_log_id": {
+          "name": "audit_log_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "difference": {
+          "name": "difference",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "aud_log_chg_log_fk": {
+          "name": "aud_log_chg_log_fk",
+          "tableFrom": "audit_log_changes",
+          "tableTo": "audit_logs",
+          "columnsFrom": [
+            "audit_log_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "aud_log_chg_pk": {
+          "name": "aud_log_chg_pk",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.audit_logs": {
       "name": "audit_logs",
       "schema": "",
@@ -346,25 +376,21 @@
         },
         "operation": {
           "name": "operation",
-          "type": "text",
+          "type": "operation_enum",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
         "resource_type": {
           "name": "resource_type",
-          "type": "text",
+          "type": "resource_type_enum",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
         "resource_id": {
           "name": "resource_id",
           "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "difference": {
-          "name": "difference",
-          "type": "jsonb",
           "primaryKey": false,
           "notNull": true
         },
@@ -421,13 +447,15 @@
         },
         "operation": {
           "name": "operation",
-          "type": "text",
+          "type": "operation_enum",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
         "resource": {
           "name": "resource",
-          "type": "text",
+          "type": "resource_type_enum",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
@@ -488,8 +516,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "name": {
-          "name": "name",
+        "display_name": {
+          "name": "display_name",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -512,11 +540,11 @@
         }
       },
       "uniqueConstraints": {
-        "classifications_name_unique": {
-          "name": "classifications_name_unique",
+        "classifications_display_name_unique": {
+          "name": "classifications_display_name_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "name"
+            "display_name"
           ]
         }
       },
@@ -685,7 +713,16 @@
           ]
         }
       },
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "perm_grp_co_uq": {
+          "name": "perm_grp_co_uq",
+          "nullsNotDistinct": false,
+          "columns": [
+            "permission_group_id",
+            "user_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -779,20 +816,20 @@
           "primaryKey": false,
           "notNull": false
         },
-        "create_date": {
-          "name": "create_date",
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         },
-        "last_changed_by": {
-          "name": "last_changed_by",
+        "last_updated_by": {
+          "name": "last_updated_by",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "last_change": {
-          "name": "last_change",
+        "updated_at": {
+          "name": "updated_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
@@ -849,129 +886,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.permission_group_permission_table_row_filter_values": {
-      "name": "permission_group_permission_table_row_filter_values",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "permission_group_permission_table_row_filter_id": {
-          "name": "permission_group_permission_table_row_filter_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "value": {
-          "name": "value",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "display_name": {
-          "name": "display_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "perm_grp_pt_rfv_rf_fk": {
-          "name": "perm_grp_pt_rfv_rf_fk",
-          "tableFrom": "permission_group_permission_table_row_filter_values",
-          "tableTo": "permission_group_permission_table_row_filters",
-          "columnsFrom": [
-            "permission_group_permission_table_row_filter_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "perm_grp_pt_rfv_pk": {
-          "name": "perm_grp_pt_rfv_pk",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.permission_group_permission_table_row_filters": {
-      "name": "permission_group_permission_table_row_filters",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "permission_group_permission_table_id": {
-          "name": "permission_group_permission_table_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "kod": {
-          "name": "kod",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "perm_grp_pt_rf_pt_fk": {
-          "name": "perm_grp_pt_rf_pt_fk",
-          "tableFrom": "permission_group_permission_table_row_filters",
-          "tableTo": "permission_group_permission_tables",
-          "columnsFrom": [
-            "permission_group_permission_table_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "perm_grp_pt_rf_pk": {
-          "name": "perm_grp_pt_rf_pk",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {
-        "perm_grp_pt_rf_uq": {
-          "name": "perm_grp_pt_rf_uq",
-          "nullsNotDistinct": false,
-          "columns": [
-            "permission_group_permission_table_id",
-            "kod"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.permission_group_permission_tables": {
-      "name": "permission_group_permission_tables",
+    "public.permission_group_row_filter_values": {
+      "name": "permission_group_row_filter_values",
       "schema": "",
       "columns": {
         "id": {
@@ -993,26 +909,44 @@
           "primaryKey": false,
           "notNull": true
         },
+        "permission_table_row_filter_id": {
+          "name": "permission_table_row_filter_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "given_by": {
           "name": "given_by",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "last_changed_by": {
-          "name": "last_changed_by",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_change": {
-          "name": "last_change",
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         },
-        "create_date": {
-          "name": "create_date",
+        "last_updated_by": {
+          "name": "last_updated_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
@@ -1020,9 +954,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "perm_grp_pt_grp_fk": {
-          "name": "perm_grp_pt_grp_fk",
-          "tableFrom": "permission_group_permission_tables",
+        "perm_grp_rfv_grp_fk": {
+          "name": "perm_grp_rfv_grp_fk",
+          "tableFrom": "permission_group_row_filter_values",
           "tableTo": "permission_groups",
           "columnsFrom": [
             "permission_group_id"
@@ -1030,12 +964,12 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "perm_grp_pt_tbl_fk": {
-          "name": "perm_grp_pt_tbl_fk",
-          "tableFrom": "permission_group_permission_tables",
+        "perm_grp_rfv_tbl_fk": {
+          "name": "perm_grp_rfv_tbl_fk",
+          "tableFrom": "permission_group_row_filter_values",
           "tableTo": "permission_tables",
           "columnsFrom": [
             "permission_table_id"
@@ -1045,26 +979,32 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "perm_grp_rfv_rf_tbl_fk": {
+          "name": "perm_grp_rfv_rf_tbl_fk",
+          "tableFrom": "permission_group_row_filter_values",
+          "tableTo": "permission_table_row_filters",
+          "columnsFrom": [
+            "permission_table_row_filter_id",
+            "permission_table_id"
+          ],
+          "columnsTo": [
+            "id",
+            "permission_table_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
-        "perm_grp_pt_pk": {
-          "name": "perm_grp_pt_pk",
+        "perm_grp_rfv_pk": {
+          "name": "perm_grp_rfv_pk",
           "columns": [
             "id"
           ]
         }
       },
-      "uniqueConstraints": {
-        "perm_grp_pt_uq": {
-          "name": "perm_grp_pt_uq",
-          "nullsNotDistinct": false,
-          "columns": [
-            "permission_group_id",
-            "permission_table_id"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1111,17 +1051,19 @@
           "primaryKey": false,
           "notNull": true
         },
-        "mask": {
-          "name": "mask",
+        "should_apply_masking": {
+          "name": "should_apply_masking",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": false
         },
-        "deceased_population": {
-          "name": "deceased_population",
+        "can_view_deceased": {
+          "name": "can_view_deceased",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": false
         }
       },
       "indexes": {},
@@ -1247,15 +1189,15 @@
           "primaryKey": false,
           "notNull": true
         },
-        "type": {
-          "name": "type",
+        "data_type": {
+          "name": "data_type",
           "type": "permission_table_row_filter_type",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
-        "query_builder_type": {
-          "name": "query_builder_type",
+        "ui_control_type": {
+          "name": "ui_control_type",
           "type": "permission_table_row_filter_query_builder_type",
           "typeSchema": "public",
           "primaryKey": false,
@@ -1349,6 +1291,13 @@
           "columns": [
             "name"
           ]
+        },
+        "perm_tbl_name_uq": {
+          "name": "perm_tbl_name_uq",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
         }
       },
       "policies": {},
@@ -1407,47 +1356,6 @@
           "nullsNotDistinct": false,
           "columns": [
             "name"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.sap_permitted_users": {
-      "name": "sap_permitted_users",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "sap_usr_pk": {
-          "name": "sap_usr_pk",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {
-        "sap_permitted_users_user_id_unique": {
-          "name": "sap_permitted_users_user_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
           ]
         }
       },
@@ -1635,12 +1543,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "domain_id": {
-          "name": "domain_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
         "column_name": {
           "name": "column_name",
           "type": "text",
@@ -1674,6 +1576,12 @@
           "notNull": true,
           "default": false
         },
+        "auth_key": {
+          "name": "auth_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "classification_id": {
           "name": "classification_id",
           "type": "uuid",
@@ -1702,32 +1610,15 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "tbl_cols_tbl_dom_fk": {
-          "name": "tbl_cols_tbl_dom_fk",
+        "tbl_col_cls_fk": {
+          "name": "tbl_col_cls_fk",
           "tableFrom": "table_columns",
-          "tableTo": "tables",
+          "tableTo": "classifications",
           "columnsFrom": [
-            "table_id",
-            "domain_id"
-          ],
-          "columnsTo": [
-            "id",
-            "domain_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "tbl_cols_dom_cls_fk": {
-          "name": "tbl_cols_dom_cls_fk",
-          "tableFrom": "table_columns",
-          "tableTo": "domain_classifications",
-          "columnsFrom": [
-            "domain_id",
             "classification_id"
           ],
           "columnsTo": [
-            "domain_id",
-            "classification_id"
+            "id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -1787,7 +1678,8 @@
         },
         "stage": {
           "name": "stage",
-          "type": "text",
+          "type": "verification_stage_name",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
@@ -1885,20 +1777,14 @@
           "primaryKey": false,
           "notNull": true
         },
-        "permission_keys": {
-          "name": "permission_keys",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
         "permission_table_id": {
           "name": "permission_table_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
-        "owner": {
-          "name": "owner",
+        "owner_id": {
+          "name": "owner_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -1907,13 +1793,20 @@
           "name": "source_type",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
-        "connection": {
-          "name": "connection",
-          "type": "jsonb",
+        "connection_display_name": {
+          "name": "connection_display_name",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "is_test": {
+          "name": "is_test",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "application": {
           "name": "application",
@@ -1942,12 +1835,6 @@
         "schedule": {
           "name": "schedule",
           "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updating_dependencies": {
-          "name": "updating_dependencies",
-          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         },
@@ -2003,14 +1890,6 @@
         }
       },
       "uniqueConstraints": {
-        "tbl_id_dom_uq": {
-          "name": "tbl_id_dom_uq",
-          "nullsNotDistinct": false,
-          "columns": [
-            "id",
-            "domain_id"
-          ]
-        },
         "tbl_cat_sch_nm_uq": {
           "name": "tbl_cat_sch_nm_uq",
           "nullsNotDistinct": false,
@@ -2189,7 +2068,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -2199,8 +2078,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "write": {
-          "name": "write",
+        "write_all": {
+          "name": "write_all",
           "type": "boolean",
           "primaryKey": false,
           "notNull": false
@@ -2222,7 +2101,7 @@
             "user_id"
           ],
           "columnsTo": [
-            "id"
+            "user_id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
@@ -2256,12 +2135,6 @@
       "columns": {
         "user_domain_id": {
           "name": "user_domain_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "domain_id": {
-          "name": "domain_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -2300,36 +2173,6 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
-        },
-        "usr_dom_cls_fk_ud_dom": {
-          "name": "usr_dom_cls_fk_ud_dom",
-          "tableFrom": "user_domain_classifications",
-          "tableTo": "user_domains",
-          "columnsFrom": [
-            "user_domain_id",
-            "domain_id"
-          ],
-          "columnsTo": [
-            "id",
-            "domain_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "usr_dom_cls_fk_dom_cls": {
-          "name": "usr_dom_cls_fk_dom_cls",
-          "tableFrom": "user_domain_classifications",
-          "tableTo": "domain_classifications",
-          "columnsFrom": [
-            "domain_id",
-            "classification_id"
-          ],
-          "columnsTo": [
-            "domain_id",
-            "classification_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -2359,7 +2202,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -2375,20 +2218,20 @@
           "primaryKey": false,
           "notNull": false
         },
-        "create_date": {
-          "name": "create_date",
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         },
-        "last_changed_by": {
-          "name": "last_changed_by",
+        "last_updated_by": {
+          "name": "last_updated_by",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "last_change": {
-          "name": "last_change",
+        "updated_at": {
+          "name": "updated_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
@@ -2404,7 +2247,7 @@
             "user_id"
           ],
           "columnsTo": [
-            "id"
+            "user_id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
@@ -2432,14 +2275,6 @@
         }
       },
       "uniqueConstraints": {
-        "usr_dom_id_dom_uq": {
-          "name": "usr_dom_id_dom_uq",
-          "nullsNotDistinct": false,
-          "columns": [
-            "id",
-            "domain_id"
-          ]
-        },
         "usr_dom_uq": {
           "name": "usr_dom_uq",
           "nullsNotDistinct": false,
@@ -2466,12 +2301,12 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "domain_id": {
-          "name": "domain_id",
+        "permission_group_id": {
+          "name": "permission_group_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -2499,17 +2334,17 @@
             "user_id"
           ],
           "columnsTo": [
-            "id"
+            "user_id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "usr_pg_dom_fk": {
-          "name": "usr_pg_dom_fk",
+        "usr_pg_pg_fk": {
+          "name": "usr_pg_pg_fk",
           "tableFrom": "user_permission_groups",
-          "tableTo": "domains",
+          "tableTo": "permission_groups",
           "columnsFrom": [
-            "domain_id"
+            "permission_group_id"
           ],
           "columnsTo": [
             "id"
@@ -2532,7 +2367,7 @@
           "nullsNotDistinct": false,
           "columns": [
             "user_id",
-            "domain_id"
+            "permission_group_id"
           ]
         }
       },
@@ -2540,8 +2375,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.user_permission_table_row_filter_values": {
-      "name": "user_permission_table_row_filter_values",
+    "public.user_row_filter_values": {
+      "name": "user_row_filter_values",
       "schema": "",
       "columns": {
         "id": {
@@ -2551,9 +2386,9 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "user_permission_table_id": {
-          "name": "user_permission_table_id",
-          "type": "uuid",
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -2571,7 +2406,7 @@
         },
         "value": {
           "name": "value",
-          "type": "jsonb",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -2580,41 +2415,63 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "given_by": {
+          "name": "given_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_updated_by": {
+          "name": "last_updated_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "usr_pt_rfv_pt_fk": {
-          "name": "usr_pt_rfv_pt_fk",
-          "tableFrom": "user_permission_table_row_filter_values",
-          "tableTo": "user_permission_tables",
+        "usr_rfv_usr_fk": {
+          "name": "usr_rfv_usr_fk",
+          "tableFrom": "user_row_filter_values",
+          "tableTo": "users",
           "columnsFrom": [
-            "user_permission_table_id"
+            "user_id"
           ],
           "columnsTo": [
-            "id"
+            "user_id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "usr_pt_rfv_pt_tbl_fk": {
-          "name": "usr_pt_rfv_pt_tbl_fk",
-          "tableFrom": "user_permission_table_row_filter_values",
-          "tableTo": "user_permission_tables",
+        "usr_rfv_tbl_fk": {
+          "name": "usr_rfv_tbl_fk",
+          "tableFrom": "user_row_filter_values",
+          "tableTo": "permission_tables",
           "columnsFrom": [
-            "user_permission_table_id",
             "permission_table_id"
           ],
           "columnsTo": [
-            "id",
-            "permission_table_id"
+            "id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "usr_pt_rfv_rf_tbl_fk": {
-          "name": "usr_pt_rfv_rf_tbl_fk",
-          "tableFrom": "user_permission_table_row_filter_values",
+        "usr_rfv_rf_tbl_fk": {
+          "name": "usr_rfv_rf_tbl_fk",
+          "tableFrom": "user_row_filter_values",
           "tableTo": "permission_table_row_filters",
           "columnsFrom": [
             "permission_table_row_filter_id",
@@ -2629,121 +2486,14 @@
         }
       },
       "compositePrimaryKeys": {
-        "usr_pt_rfv_pk": {
-          "name": "usr_pt_rfv_pk",
+        "usr_rfv_pk": {
+          "name": "usr_rfv_pk",
           "columns": [
             "id"
           ]
         }
       },
       "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.user_permission_tables": {
-      "name": "user_permission_tables",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "permission_table_id": {
-          "name": "permission_table_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "given_by": {
-          "name": "given_by",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_changed_by": {
-          "name": "last_changed_by",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_change": {
-          "name": "last_change",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "create_date": {
-          "name": "create_date",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "usr_pt_usr_fk": {
-          "name": "usr_pt_usr_fk",
-          "tableFrom": "user_permission_tables",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "usr_pt_tbl_fk": {
-          "name": "usr_pt_tbl_fk",
-          "tableFrom": "user_permission_tables",
-          "tableTo": "permission_tables",
-          "columnsFrom": [
-            "permission_table_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "usr_pt_pk": {
-          "name": "usr_pt_pk",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {
-        "usr_pt_id_tbl_uq": {
-          "name": "usr_pt_id_tbl_uq",
-          "nullsNotDistinct": false,
-          "columns": [
-            "id",
-            "permission_table_id"
-          ]
-        },
-        "usr_pt_uq": {
-          "name": "usr_pt_uq",
-          "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "permission_table_id"
-          ]
-        }
-      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2793,16 +2543,9 @@
       "name": "user_unique_populations",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
         "user_id": {
           "name": "user_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -2823,7 +2566,7 @@
             "user_id"
           ],
           "columnsTo": [
-            "id"
+            "user_id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
@@ -2833,7 +2576,8 @@
         "usr_up_pk": {
           "name": "usr_up_pk",
           "columns": [
-            "id"
+            "user_id",
+            "value"
           ]
         }
       },
@@ -2871,17 +2615,19 @@
           "primaryKey": false,
           "notNull": false
         },
-        "mask": {
-          "name": "mask",
+        "should_apply_masking": {
+          "name": "should_apply_masking",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": false
         },
-        "deceased_population": {
-          "name": "deceased_population",
+        "can_view_deceased": {
+          "name": "can_view_deceased",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": false
         },
         "user_type_id": {
           "name": "user_type_id",
@@ -2889,11 +2635,12 @@
           "primaryKey": false,
           "notNull": true
         },
-        "impersonate_value": {
-          "name": "impersonate_value",
+        "can_impersonate": {
+          "name": "can_impersonate",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": false
         },
         "impersonate_expression": {
           "name": "impersonate_expression",
@@ -2901,11 +2648,18 @@
           "primaryKey": false,
           "notNull": false
         },
-        "blocked": {
-          "name": "blocked",
+        "is_blocked": {
+          "name": "is_blocked",
           "type": "boolean",
           "primaryKey": false,
           "notNull": false
+        },
+        "is_sap_permitted": {
+          "name": "is_sap_permitted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         }
       },
       "indexes": {},
@@ -2928,16 +2682,16 @@
         "usr_pk": {
           "name": "usr_pk",
           "columns": [
-            "id"
+            "user_id"
           ]
         }
       },
       "uniqueConstraints": {
-        "users_user_id_unique": {
-          "name": "users_user_id_unique",
+        "usr_id_uq": {
+          "name": "usr_id_uq",
           "nullsNotDistinct": false,
           "columns": [
-            "user_id"
+            "id"
           ]
         }
       },
@@ -2963,6 +2717,15 @@
         "integer",
         "string",
         "boolean"
+      ]
+    },
+    "public.verification_stage_name": {
+      "name": "verification_stage_name",
+      "schema": "public",
+      "values": [
+        "technical_correctness",
+        "business_correctness",
+        "documentation_correctness"
       ]
     }
   },

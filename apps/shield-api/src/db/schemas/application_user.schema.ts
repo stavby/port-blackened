@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { foreignKey, pgTable, uuid, text, timestamp, boolean, primaryKey, unique } from "drizzle-orm/pg-core";
 import { classifications } from "./classification.schema";
-import { domainClassifications, domains } from "./domain.schema";
+import { domains } from "./domain.schema";
 import { roles } from "./role.schema";
 
 export const applicationUsers = pgTable(
@@ -15,7 +15,7 @@ export const applicationUsers = pgTable(
     canCreateConnections: boolean("can_create_connections").notNull(),
     canManageUniquePopulationIndications: boolean("can_manage_unique_population_indications").notNull(),
     givenBy: text("given_by"),
-    lastChangedBy: text("last_changed_by"),
+    lastUpdatedBy: text("last_updated_by"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -71,7 +71,6 @@ export const applicationUserDomainClassifications = pgTable(
   "application_user_domain_classifications",
   {
     applicationUserDomainId: uuid("application_user_domain_id").notNull(),
-    domainId: uuid("domain_id").notNull(),
     classificationId: uuid("classification_id").notNull(),
   },
   (table) => [
@@ -82,15 +81,10 @@ export const applicationUserDomainClassifications = pgTable(
       name: "app_usr_dom_cls_cls_fk",
     }),
     foreignKey({
-      columns: [table.applicationUserDomainId, table.domainId],
-      foreignColumns: [applicationUserDomains.id, applicationUserDomains.domainId],
+      columns: [table.applicationUserDomainId],
+      foreignColumns: [applicationUserDomains.id],
       name: "app_usr_dom_cls_fk_ud",
     }).onDelete("cascade"),
-    foreignKey({
-      columns: [table.domainId, table.classificationId],
-      foreignColumns: [domainClassifications.domainId, domainClassifications.classificationId],
-      name: "app_usr_dom_cls_fk_dc",
-    }),
   ],
 );
 

@@ -1,8 +1,14 @@
 import { relations } from "drizzle-orm";
-import { boolean, foreignKey, jsonb, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { boolean, foreignKey, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 import { classifications } from "./classification.schema";
-import { domainClassifications, domains } from "./domain.schema";
+import { domains } from "./domain.schema";
 import { permissionTables } from "./permission_table.schema";
+
+export const verificationStageNameEnum = pgEnum("verification_stage_name", [
+  "technical_correctness",
+  "business_correctness",
+  "documentation_correctness",
+]);
 
 export const columnMasks = pgTable(
   "column_masks",
@@ -24,23 +30,21 @@ export const tables = pgTable(
     tableDisplayName: text("table_display_name").notNull().default(""),
     tableDesc: text("table_desc").notNull().default(""),
     domainId: uuid("domain_id").notNull(),
-    permissionKeys: jsonb("permission_keys").notNull(),
     permissionTableId: uuid("permission_table_id"),
-    owner: text("owner").notNull(),
-    sourceType: text("source_type").notNull(),
-    connection: jsonb("connection"),
+    ownerId: text("owner_id").notNull(),
+    sourceType: text("source_type"),
+    connectionDisplayName: text("connection_display_name"),
+    isTest: boolean("is_test").notNull().default(false),
     application: text("application"),
     query: text("query"),
     scheduleType: text("schedule_type"),
     processType: text("process_type"),
     schedule: text("schedule"),
-    updatingDependencies: jsonb("updating_dependencies"),
     lastVerificationTime: timestamp("last_verification_time"),
     isDeprecated: boolean("is_deprecated").notNull().default(false),
   },
   (table) => [
     primaryKey({ columns: [table.id], name: "tbl_pk" }),
-    unique("tbl_id_dom_uq").on(table.id, table.domainId),
     unique("tbl_cat_sch_nm_uq").on(table.catalogName, table.schemaName, table.tableName),
     foreignKey({
       columns: [table.domainId],
@@ -60,12 +64,12 @@ export const tableColumns = pgTable(
   {
     id: uuid("id").defaultRandom().notNull(),
     tableId: uuid("table_id").notNull(),
-    domainId: uuid("domain_id").notNull(),
     columnName: text("column_name").notNull(),
     dataType: text("data_type").notNull(),
     columnDisplayName: text("column_display_name").notNull().default(""),
     columnDesc: text("column_desc").notNull().default(""),
     isKey: boolean("is_key").notNull().default(false),
+    authKey: text("auth_key"),
     classificationId: uuid("classification_id"),
     maskId: uuid("mask_id"),
   },
@@ -78,14 +82,9 @@ export const tableColumns = pgTable(
       name: "tbl_col_tbl_fk",
     }).onDelete("cascade"),
     foreignKey({
-      columns: [table.tableId, table.domainId],
-      foreignColumns: [tables.id, tables.domainId],
-      name: "tbl_cols_tbl_dom_fk",
-    }),
-    foreignKey({
-      columns: [table.domainId, table.classificationId],
-      foreignColumns: [domainClassifications.domainId, domainClassifications.classificationId],
-      name: "tbl_cols_dom_cls_fk",
+      columns: [table.classificationId],
+      foreignColumns: [classifications.id],
+      name: "tbl_col_cls_fk",
     }),
     foreignKey({
       columns: [table.maskId],
@@ -119,7 +118,7 @@ export const tableVerificationStages = pgTable(
   {
     id: uuid("id").defaultRandom().notNull(),
     tableId: uuid("table_id").notNull(),
-    stage: text("stage").notNull(),
+    stage: verificationStageNameEnum("stage").notNull(),
     isChecked: boolean("is_checked").notNull(),
   },
   (table) => [

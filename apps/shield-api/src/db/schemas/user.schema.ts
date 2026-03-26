@@ -1,9 +1,15 @@
 import { relations } from "drizzle-orm";
-import { boolean, foreignKey, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { boolean, foreignKey, integer, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 import { classifications } from "./classification.schema";
-import { domainClassifications, domains } from "./domain.schema";
+import { domains } from "./domain.schema";
 import { permissionTableRowFilters, permissionTables } from "./permission_table.schema";
-import { UserRowFilterValueValue } from "src/user/user.classes";
+import { permissionGroups } from "./permission_groups.schema";
+import {
+  createDomainClassificationColumns,
+  createDomainsColumns,
+  createPermissionVisibilityColumns,
+  createRowFilterValuePayloadColumns,
+} from "./shared.schema";
 
 export const userTypes = pgTable(
   "user_types",
@@ -18,18 +24,19 @@ export const users = pgTable(
   "users",
   {
     id: uuid("id").defaultRandom().notNull(),
-    userId: text("user_id").notNull().unique(),
+    userId: text("user_id").notNull(),
     firstName: text("first_name"),
     lastName: text("last_name"),
-    mask: boolean("mask").notNull(),
-    deceasedPopulation: boolean("deceased_population").notNull(),
+    ...createPermissionVisibilityColumns(),
     userTypeId: uuid("user_type_id").notNull(),
-    impersonateValue: boolean("impersonate_value").notNull(),
+    canImpersonate: boolean("can_impersonate").notNull().default(false),
     impersonateExpression: text("impersonate_expression"),
-    blocked: boolean("blocked"),
+    isBlocked: boolean("is_blocked"),
+    isSapPermitted: boolean("is_sap_permitted").notNull().default(false),
   },
   (table) => [
-    primaryKey({ columns: [table.id], name: "usr_pk" }),
+    primaryKey({ columns: [table.userId], name: "usr_pk" }),
+    unique("usr_id_uq").on(table.id),
     foreignKey({
       columns: [table.userTypeId],
       foreignColumns: [userTypes.id],
@@ -42,9 +49,9 @@ export const userCatalogs = pgTable(
   "user_catalogs",
   {
     id: uuid("id").defaultRandom().notNull(),
-    userId: uuid("user_id").notNull(),
+    userId: text("user_id").notNull(),
     catalogName: text("catalog_name").notNull(),
-    write: boolean("write"),
+    writeAll: boolean("write_all"),
     readAll: boolean("read_all"),
   },
   (table) => [
@@ -52,7 +59,7 @@ export const userCatalogs = pgTable(
     unique("usr_cat_uq").on(table.userId, table.catalogName),
     foreignKey({
       columns: [table.userId],
-      foreignColumns: [users.id],
+      foreignColumns: [users.userId],
       name: "usr_cat_usr_fk",
     }).onDelete("cascade"),
   ],
@@ -80,15 +87,14 @@ export const userCatalogSchemas = pgTable(
 export const userUniquePopulations = pgTable(
   "user_unique_populations",
   {
-    id: uuid("id").defaultRandom().notNull(),
-    userId: uuid("user_id").notNull(),
+    userId: text("user_id").notNull(),
     value: integer("value").notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.id], name: "usr_up_pk" }),
+    primaryKey({ columns: [table.userId, table.value], name: "usr_up_pk" }),
     foreignKey({
       columns: [table.userId],
-      foreignColumns: [users.id],
+      foreignColumns: [users.userId],
       name: "usr_up_usr_fk",
     }).onDelete("cascade"),
   ],
@@ -98,20 +104,15 @@ export const userDomains = pgTable(
   "user_domains",
   {
     id: uuid("id").defaultRandom().notNull(),
-    userId: uuid("user_id").notNull(),
-    domainId: uuid("domain_id").notNull(),
-    givenBy: text("given_by"),
-    createdAt: timestamp("create_date"),
-    lastChangedBy: text("last_changed_by"),
-    updatedAt: timestamp("last_change"),
+    userId: text("user_id").notNull(),
+    ...createDomainsColumns(),
   },
   (table) => [
     primaryKey({ columns: [table.id], name: "usr_dom_pk" }),
-    unique("usr_dom_id_dom_uq").on(table.id, table.domainId),
     unique("usr_dom_uq").on(table.userId, table.domainId),
     foreignKey({
       columns: [table.userId],
-      foreignColumns: [users.id],
+      foreignColumns: [users.userId],
       name: "usr_dom_usr_fk",
     }).onDelete("cascade"),
     foreignKey({
@@ -126,8 +127,7 @@ export const userDomainClassifications = pgTable(
   "user_domain_classifications",
   {
     userDomainId: uuid("user_domain_id").notNull(),
-    domainId: uuid("domain_id").notNull(),
-    classificationId: uuid("classification_id").notNull(),
+    ...createDomainClassificationColumns(),
   },
   (table) => [
     primaryKey({ columns: [table.userDomainId, table.classificationId], name: "usr_dom_cls_pk" }),
@@ -141,73 +141,34 @@ export const userDomainClassifications = pgTable(
       foreignColumns: [classifications.id],
       name: "usr_dom_cls_fk_cls",
     }),
-    foreignKey({
-      columns: [table.userDomainId, table.domainId],
-      foreignColumns: [userDomains.id, userDomains.domainId],
-      name: "usr_dom_cls_fk_ud_dom",
-    }),
-    foreignKey({
-      columns: [table.domainId, table.classificationId],
-      foreignColumns: [domainClassifications.domainId, domainClassifications.classificationId],
-      name: "usr_dom_cls_fk_dom_cls",
-    }),
   ],
 );
 
-export const userPermissionTables = pgTable(
-  "user_permission_tables",
+export const userRowFilterValues = pgTable(
+  "user_row_filter_values",
   {
     id: uuid("id").defaultRandom().notNull(),
-    userId: uuid("user_id").notNull(),
+    userId: text("user_id").notNull(),
     permissionTableId: uuid("permission_table_id").notNull(),
-    givenBy: text("given_by"),
-    lastChangedBy: text("last_changed_by"),
-    updatedAt: timestamp("last_change"),
-    createdAt: timestamp("create_date"),
+    permissionTableRowFilterId: uuid("permission_table_row_filter_id").notNull(),
+    ...createRowFilterValuePayloadColumns(),
   },
   (table) => [
-    primaryKey({ columns: [table.id], name: "usr_pt_pk" }),
-    unique("usr_pt_id_tbl_uq").on(table.id, table.permissionTableId),
-    unique("usr_pt_uq").on(table.userId, table.permissionTableId),
+    primaryKey({ columns: [table.id], name: "usr_rfv_pk" }),
     foreignKey({
       columns: [table.userId],
-      foreignColumns: [users.id],
-      name: "usr_pt_usr_fk",
+      foreignColumns: [users.userId],
+      name: "usr_rfv_usr_fk",
     }).onDelete("cascade"),
     foreignKey({
       columns: [table.permissionTableId],
       foreignColumns: [permissionTables.id],
-      name: "usr_pt_tbl_fk",
-    }),
-  ],
-);
-
-export const userPermissionTableRowFilterValues = pgTable(
-  "user_permission_table_row_filter_values",
-  {
-    id: uuid("id").defaultRandom().notNull(),
-    userPermissionTableId: uuid("user_permission_table_id").notNull(),
-    permissionTableId: uuid("permission_table_id").notNull(),
-    permissionTableRowFilterId: uuid("permission_table_row_filter_id").notNull(),
-    value: jsonb("value").$type<UserRowFilterValueValue>().notNull(),
-    displayName: text("display_name").notNull(),
-  },
-  (table) => [
-    primaryKey({ columns: [table.id], name: "usr_pt_rfv_pk" }),
-    foreignKey({
-      columns: [table.userPermissionTableId],
-      foreignColumns: [userPermissionTables.id],
-      name: "usr_pt_rfv_pt_fk",
-    }).onDelete("cascade"),
-    foreignKey({
-      columns: [table.userPermissionTableId, table.permissionTableId],
-      foreignColumns: [userPermissionTables.id, userPermissionTables.permissionTableId],
-      name: "usr_pt_rfv_pt_tbl_fk",
+      name: "usr_rfv_tbl_fk",
     }),
     foreignKey({
       columns: [table.permissionTableRowFilterId, table.permissionTableId],
       foreignColumns: [permissionTableRowFilters.id, permissionTableRowFilters.permissionTableId],
-      name: "usr_pt_rfv_rf_tbl_fk",
+      name: "usr_rfv_rf_tbl_fk",
     }),
   ],
 );
@@ -216,23 +177,23 @@ export const userPermissionGroups = pgTable(
   "user_permission_groups",
   {
     id: uuid("id").defaultRandom().notNull(),
-    userId: uuid("user_id").notNull(),
-    domainId: uuid("domain_id").notNull(),
+    userId: text("user_id").notNull(),
+    permissionGroupId: uuid("permission_group_id").notNull(),
     givenBy: text("given_by").notNull(),
     registrationDate: timestamp("registration_date").notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.id], name: "usr_pg_pk" }),
-    unique("usr_pg_uq").on(table.userId, table.domainId),
+    unique("usr_pg_uq").on(table.userId, table.permissionGroupId),
     foreignKey({
       columns: [table.userId],
-      foreignColumns: [users.id],
+      foreignColumns: [users.userId],
       name: "usr_pg_usr_fk",
     }).onDelete("cascade"),
     foreignKey({
-      columns: [table.domainId],
-      foreignColumns: [domains.id],
-      name: "usr_pg_dom_fk",
+      columns: [table.permissionGroupId],
+      foreignColumns: [permissionGroups.id],
+      name: "usr_pg_pg_fk",
     }),
   ],
 );
@@ -245,7 +206,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   catalogs: many(userCatalogs),
   uniquePopulations: many(userUniquePopulations),
   domains: many(userDomains),
-  permissionTables: many(userPermissionTables),
+  rowFilterValues: many(userRowFilterValues),
   permissionGroups: many(userPermissionGroups),
 }));
 
@@ -256,7 +217,7 @@ export const userTypesRelations = relations(userTypes, ({ many }) => ({
 export const userCatalogsRelations = relations(userCatalogs, ({ one, many }) => ({
   user: one(users, {
     fields: [userCatalogs.userId],
-    references: [users.id],
+    references: [users.userId],
   }),
   schemas: many(userCatalogSchemas),
 }));
@@ -271,14 +232,14 @@ export const userCatalogSchemasRelations = relations(userCatalogSchemas, ({ one 
 export const userUniquePopulationsRelations = relations(userUniquePopulations, ({ one }) => ({
   user: one(users, {
     fields: [userUniquePopulations.userId],
-    references: [users.id],
+    references: [users.userId],
   }),
 }));
 
 export const userDomainsRelations = relations(userDomains, ({ one, many }) => ({
   user: one(users, {
     fields: [userDomains.userId],
-    references: [users.id],
+    references: [users.userId],
   }),
   domain: one(domains, {
     fields: [userDomains.domainId],
@@ -298,36 +259,28 @@ export const userDomainClassificationsRelations = relations(userDomainClassifica
   }),
 }));
 
-export const userPermissionTablesRelations = relations(userPermissionTables, ({ one, many }) => ({
+export const userRowFilterValuesRelations = relations(userRowFilterValues, ({ one }) => ({
   user: one(users, {
-    fields: [userPermissionTables.userId],
-    references: [users.id],
+    fields: [userRowFilterValues.userId],
+    references: [users.userId],
   }),
   permissionTable: one(permissionTables, {
-    fields: [userPermissionTables.permissionTableId],
+    fields: [userRowFilterValues.permissionTableId],
     references: [permissionTables.id],
   }),
-  rowFilterValues: many(userPermissionTableRowFilterValues),
-}));
-
-export const userPermissionTableRowFilterValuesRelations = relations(userPermissionTableRowFilterValues, ({ one }) => ({
-  userPermissionTable: one(userPermissionTables, {
-    fields: [userPermissionTableRowFilterValues.userPermissionTableId],
-    references: [userPermissionTables.id],
-  }),
   rowFilter: one(permissionTableRowFilters, {
-    fields: [userPermissionTableRowFilterValues.permissionTableRowFilterId],
-    references: [permissionTableRowFilters.id],
+    fields: [userRowFilterValues.permissionTableRowFilterId, userRowFilterValues.permissionTableId],
+    references: [permissionTableRowFilters.id, permissionTableRowFilters.permissionTableId],
   }),
 }));
 
 export const userPermissionGroupsRelations = relations(userPermissionGroups, ({ one }) => ({
   user: one(users, {
     fields: [userPermissionGroups.userId],
-    references: [users.id],
+    references: [users.userId],
   }),
-  domain: one(domains, {
-    fields: [userPermissionGroups.domainId],
-    references: [domains.id],
+  permissionGroup: one(permissionGroups, {
+    fields: [userPermissionGroups.permissionGroupId],
+    references: [permissionGroups.id],
   }),
 }));

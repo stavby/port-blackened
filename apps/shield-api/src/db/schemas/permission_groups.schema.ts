@@ -1,8 +1,14 @@
 import { relations } from "drizzle-orm";
-import { boolean, foreignKey, jsonb, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { foreignKey, pgTable, primaryKey, text, unique, uuid } from "drizzle-orm/pg-core";
 import { classifications } from "./classification.schema";
 import { domains } from "./domain.schema";
-import { permissionTables } from "./permission_table.schema";
+import { permissionTableRowFilters, permissionTables } from "./permission_table.schema";
+import {
+  createDomainClassificationColumns,
+  createDomainsColumns,
+  createPermissionVisibilityColumns,
+  createRowFilterValuePayloadColumns,
+} from "./shared.schema";
 
 export const permissionGroups = pgTable(
   "permission_groups",
@@ -13,8 +19,7 @@ export const permissionGroups = pgTable(
     ownerName: text("owner_name").notNull(),
     description: text("description").notNull().default(""),
     color: text("color").notNull(),
-    mask: boolean("mask").notNull(),
-    deceasedPopulation: boolean("deceased_population").notNull(),
+    ...createPermissionVisibilityColumns(),
   },
   (table) => [primaryKey({ columns: [table.id], name: "perm_grp_pk" })],
 );
@@ -34,6 +39,7 @@ export const permissionGroupCoOwners = pgTable(
       foreignColumns: [permissionGroups.id],
       name: "perm_grp_co_grp_fk",
     }),
+    unique("perm_grp_co_uq").on(table.permissionGroupId, table.userId),
   ],
 );
 
@@ -42,11 +48,7 @@ export const permissionGroupDomains = pgTable(
   {
     id: uuid("id").defaultRandom().notNull(),
     permissionGroupId: uuid("permission_group_id").notNull(),
-    domainId: uuid("domain_id").notNull(),
-    givenBy: text("given_by"),
-    createdAt: timestamp("create_date"),
-    lastChangedBy: text("last_changed_by"),
-    updatedAt: timestamp("last_change"),
+    ...createDomainsColumns(),
   },
   (table) => [
     primaryKey({ columns: [table.id], name: "perm_grp_dom_pk" }),
@@ -68,7 +70,7 @@ export const permissionGroupDomainClassifications = pgTable(
   "permission_group_domain_classifications",
   {
     permissionGroupDomainId: uuid("permission_group_domain_id").notNull(),
-    classificationId: uuid("classification_id").notNull(),
+    ...createDomainClassificationColumns(),
   },
   (table) => [
     primaryKey({ columns: [table.permissionGroupDomainId, table.classificationId], name: "perm_grp_dom_cls_pk" }),
@@ -85,65 +87,29 @@ export const permissionGroupDomainClassifications = pgTable(
   ],
 );
 
-export const permissionGroupPermissionTables = pgTable(
-  "permission_group_permission_tables",
+export const permissionGroupRowFilterValues = pgTable(
+  "permission_group_row_filter_values",
   {
     id: uuid("id").defaultRandom().notNull(),
     permissionGroupId: uuid("permission_group_id").notNull(),
-    permissionTableId: uuid("permission_table_id").notNull(),
-    givenBy: text("given_by"),
-    lastChangedBy: text("last_changed_by"),
-    updatedAt: timestamp("last_change"),
-    createdAt: timestamp("create_date"),
+    ...createRowFilterValuePayloadColumns(),
   },
   (table) => [
-    primaryKey({ columns: [table.id], name: "perm_grp_pt_pk" }),
-    unique("perm_grp_pt_uq").on(table.permissionGroupId, table.permissionTableId),
+    primaryKey({ columns: [table.id], name: "perm_grp_rfv_pk" }),
     foreignKey({
       columns: [table.permissionGroupId],
       foreignColumns: [permissionGroups.id],
-      name: "perm_grp_pt_grp_fk",
-    }),
+      name: "perm_grp_rfv_grp_fk",
+    }).onDelete("cascade"),
     foreignKey({
       columns: [table.permissionTableId],
       foreignColumns: [permissionTables.id],
-      name: "perm_grp_pt_tbl_fk",
+      name: "perm_grp_rfv_tbl_fk",
     }),
-  ],
-);
-
-export const permissionGroupPermissionTableRowFilters = pgTable(
-  "permission_group_permission_table_row_filters",
-  {
-    id: uuid("id").defaultRandom().notNull(),
-    permissionGroupPermissionTableId: uuid("permission_group_permission_table_id").notNull(),
-    kod: text("kod").notNull(),
-  },
-  (table) => [
-    primaryKey({ columns: [table.id], name: "perm_grp_pt_rf_pk" }),
-    unique("perm_grp_pt_rf_uq").on(table.permissionGroupPermissionTableId, table.kod),
     foreignKey({
-      columns: [table.permissionGroupPermissionTableId],
-      foreignColumns: [permissionGroupPermissionTables.id],
-      name: "perm_grp_pt_rf_pt_fk",
-    }),
-  ],
-);
-
-export const permissionGroupPermissionTableRowFilterValues = pgTable(
-  "permission_group_permission_table_row_filter_values",
-  {
-    id: uuid("id").defaultRandom().notNull(),
-    permissionGroupPermissionTableRowFilterId: uuid("permission_group_permission_table_row_filter_id").notNull(),
-    value: jsonb("value").notNull(),
-    displayName: text("display_name").notNull(),
-  },
-  (table) => [
-    primaryKey({ columns: [table.id], name: "perm_grp_pt_rfv_pk" }),
-    foreignKey({
-      columns: [table.permissionGroupPermissionTableRowFilterId],
-      foreignColumns: [permissionGroupPermissionTableRowFilters.id],
-      name: "perm_grp_pt_rfv_rf_fk",
+      columns: [table.permissionTableRowFilterId, table.permissionTableId],
+      foreignColumns: [permissionTableRowFilters.id, permissionTableRowFilters.permissionTableId],
+      name: "perm_grp_rfv_rf_tbl_fk",
     }),
   ],
 );
@@ -151,7 +117,7 @@ export const permissionGroupPermissionTableRowFilterValues = pgTable(
 export const permissionGroupsRelations = relations(permissionGroups, ({ many }) => ({
   coOwners: many(permissionGroupCoOwners),
   domains: many(permissionGroupDomains),
-  permissionTables: many(permissionGroupPermissionTables),
+  rowFilterValues: many(permissionGroupRowFilterValues),
 }));
 
 export const permissionGroupCoOwnersRelations = relations(permissionGroupCoOwners, ({ one }) => ({
@@ -184,32 +150,17 @@ export const permissionGroupDomainClassificationsRelations = relations(permissio
   }),
 }));
 
-export const permissionGroupPermissionTablesRelations = relations(permissionGroupPermissionTables, ({ one, many }) => ({
+export const permissionGroupRowFilterValuesRelations = relations(permissionGroupRowFilterValues, ({ one }) => ({
   permissionGroup: one(permissionGroups, {
-    fields: [permissionGroupPermissionTables.permissionGroupId],
+    fields: [permissionGroupRowFilterValues.permissionGroupId],
     references: [permissionGroups.id],
   }),
   permissionTable: one(permissionTables, {
-    fields: [permissionGroupPermissionTables.permissionTableId],
+    fields: [permissionGroupRowFilterValues.permissionTableId],
     references: [permissionTables.id],
   }),
-  rowFilters: many(permissionGroupPermissionTableRowFilters),
-}));
-
-export const permissionGroupPermissionTableRowFiltersRelations = relations(permissionGroupPermissionTableRowFilters, ({ one, many }) => ({
-  permissionGroupPermissionTable: one(permissionGroupPermissionTables, {
-    fields: [permissionGroupPermissionTableRowFilters.permissionGroupPermissionTableId],
-    references: [permissionGroupPermissionTables.id],
+  rowFilter: one(permissionTableRowFilters, {
+    fields: [permissionGroupRowFilterValues.permissionTableRowFilterId, permissionGroupRowFilterValues.permissionTableId],
+    references: [permissionTableRowFilters.id, permissionTableRowFilters.permissionTableId],
   }),
-  values: many(permissionGroupPermissionTableRowFilterValues),
 }));
-
-export const permissionGroupPermissionTableRowFilterValuesRelations = relations(
-  permissionGroupPermissionTableRowFilterValues,
-  ({ one }) => ({
-    rowFilter: one(permissionGroupPermissionTableRowFilters, {
-      fields: [permissionGroupPermissionTableRowFilterValues.permissionGroupPermissionTableRowFilterId],
-      references: [permissionGroupPermissionTableRowFilters.id],
-    }),
-  }),
-);

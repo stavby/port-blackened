@@ -1,13 +1,27 @@
+import { Difference } from "@port/shield-models";
 import { relations } from "drizzle-orm";
-import { foreignKey, integer, jsonb, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { foreignKey, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
+
+const operationEnum = pgEnum("operation_enum", ["create", "update", "delete", "clone"]);
+
+const resourceTypeEnum = pgEnum("resource_type_enum", [
+  "application_user",
+  "classification",
+  "domain",
+  "permission_table",
+  "table",
+  "task",
+  "user",
+  "permission_group",
+]);
 
 export const auditing = pgTable(
   "auditing",
   {
     id: uuid("id").defaultRandom().notNull(),
     userId: text("user_id").notNull(),
-    operation: text("operation").notNull(),
-    resource: text("resource").notNull(),
+    operation: operationEnum("operation").notNull(),
+    resource: resourceTypeEnum("resource").notNull(),
     status: text("status").notNull(),
     resourceInfo: jsonb("resource_info").notNull(),
     message: text("message").notNull(),
@@ -22,13 +36,12 @@ export const auditLogs = pgTable(
   {
     id: uuid("id").defaultRandom().notNull(),
     userId: text("user_id").notNull(),
-    operation: text("operation").notNull(),
-    resourceType: text("resource_type").notNull(),
+    operation: operationEnum("operation").notNull(),
+    resourceType: resourceTypeEnum("resource_type").notNull(),
     resourceId: uuid("resource_id").notNull(),
-    difference: jsonb("difference").notNull(),
     time: timestamp("time").notNull(),
     version: integer("version").notNull(),
-    metadata: jsonb("metadata"),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>(),
   },
   (table) => [primaryKey({ columns: [table.id], name: "aud_log_pk" })],
 );
@@ -38,27 +51,10 @@ export const auditLogChanges = pgTable(
   {
     id: uuid("id").defaultRandom().notNull(),
     auditLogId: uuid("audit_log_id").notNull(),
-    changeIndex: integer("change_index").notNull(),
-    kind: text("kind").notNull(),
-    changeType: text("change_type"),
-    fieldPath: text("field_path"),
-    columnName: text("column_name"),
-    rowFilterKod: text("row_filter_kod"),
-    stage: text("stage"),
-    actionType: text("action_type"),
-    domainId: text("domain_id"),
-    classificationId: text("classification_id"),
-    permissionTableId: text("permission_table_id"),
-    permissionGroupId: text("permission_group_id"),
-    roleId: text("role_id"),
-    oldValue: jsonb("old_value"),
-    newValue: jsonb("new_value"),
-    value: jsonb("value"),
-    rawDiff: jsonb("raw_diff").notNull(),
+    difference: jsonb("difference").notNull().$type<Difference>(),
   },
   (table) => [
     primaryKey({ columns: [table.id], name: "aud_log_chg_pk" }),
-    unique("aud_log_chg_seq_uq").on(table.auditLogId, table.changeIndex),
     foreignKey({
       columns: [table.auditLogId],
       foreignColumns: [auditLogs.id],

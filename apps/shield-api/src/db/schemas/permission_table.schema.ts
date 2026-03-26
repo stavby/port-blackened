@@ -15,7 +15,7 @@ export const permissionTables = pgTable(
     name: text("name").notNull().unique(),
     displayName: text("display_name").notNull(),
   },
-  (table) => [primaryKey({ columns: [table.id], name: "perm_tbl_pk" })],
+  (table) => [primaryKey({ columns: [table.id], name: "perm_tbl_pk" }), unique("perm_tbl_name_uq").on(table.name)],
 );
 
 export const permissionTableRowFilters = pgTable(
@@ -26,8 +26,8 @@ export const permissionTableRowFilters = pgTable(
     kod: text("kod").notNull(),
     displayName: text("display_name").notNull(),
     dimensionsTable: text("dimensions_table").notNull(),
-    type: permissionTableRowFilterTypeEnum("type").notNull(),
-    queryBuilderType: permissionTableRowFilterQueryBuilderTypeEnum("query_builder_type").notNull(),
+    dataType: permissionTableRowFilterTypeEnum("data_type").notNull(),
+    uiControlType: permissionTableRowFilterQueryBuilderTypeEnum("ui_control_type").notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.id], name: "perm_tbl_rf_pk" }),

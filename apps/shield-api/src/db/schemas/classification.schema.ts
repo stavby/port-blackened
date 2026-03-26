@@ -4,7 +4,7 @@ export const classifications = pgTable(
   "classifications",
   {
     id: uuid("id").defaultRandom().notNull(),
-    name: text("name").notNull().unique(),
+    displayName: text("display_name").notNull().unique(),
     description: text("description").notNull(),
   },
   (table) => [primaryKey({ columns: [table.id], name: "cls_pk" })],
