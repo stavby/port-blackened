@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { boolean, foreignKey, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { boolean, foreignKey, pgEnum, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 import { classifications } from "./classification.schema";
 import { domains } from "./domain.schema";
 import { permissionTables } from "./permission_table.schema";
@@ -29,8 +29,8 @@ export const tables = pgTable(
     tableName: text("table_name").notNull(),
     tableDisplayName: text("table_display_name").notNull().default(""),
     tableDesc: text("table_desc").notNull().default(""),
-    domainId: uuid("domain_id").notNull(),
-    permissionTableId: uuid("permission_table_id"),
+    domainId: text("domain_id").notNull(),
+    permissionTableId: text("permission_table_id"),
     ownerId: text("owner_id").notNull(),
     sourceType: text("source_type"),
     connectionDisplayName: text("connection_display_name"),
@@ -70,7 +70,7 @@ export const tableColumns = pgTable(
     columnDesc: text("column_desc").notNull().default(""),
     isKey: boolean("is_key").notNull().default(false),
     authKey: text("auth_key"),
-    classificationId: uuid("classification_id"),
+    classificationId: text("classification_id"),
     maskId: uuid("mask_id"),
   },
   (table) => [

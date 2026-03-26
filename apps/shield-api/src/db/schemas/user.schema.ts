@@ -11,38 +11,20 @@ import {
   createRowFilterValuePayloadColumns,
 } from "./shared.schema";
 
-export const userTypes = pgTable(
-  "user_types",
-  {
-    id: uuid("id").defaultRandom().notNull(),
-    displayName: text("display_name").notNull().unique(),
-  },
-  (table) => [primaryKey({ columns: [table.id], name: "usr_type_pk" })],
-);
-
 export const users = pgTable(
   "users",
   {
-    id: uuid("id").defaultRandom().notNull(),
+    id: text("id").unique(),
     userId: text("user_id").notNull(),
     firstName: text("first_name"),
     lastName: text("last_name"),
     ...createPermissionVisibilityColumns(),
-    userTypeId: uuid("user_type_id").notNull(),
     canImpersonate: boolean("can_impersonate").notNull().default(false),
     impersonateExpression: text("impersonate_expression"),
     isBlocked: boolean("is_blocked"),
     isSapPermitted: boolean("is_sap_permitted").notNull().default(false),
   },
-  (table) => [
-    primaryKey({ columns: [table.userId], name: "usr_pk" }),
-    unique("usr_id_uq").on(table.id),
-    foreignKey({
-      columns: [table.userTypeId],
-      foreignColumns: [userTypes.id],
-      name: "usr_type_fk",
-    }),
-  ],
+  (table) => [primaryKey({ columns: [table.userId], name: "usr_pk" }), unique("usr_id_uq").on(table.id)],
 );
 
 export const userCatalogs = pgTable(
@@ -149,7 +131,7 @@ export const userRowFilterValues = pgTable(
   {
     id: uuid("id").defaultRandom().notNull(),
     userId: text("user_id").notNull(),
-    permissionTableId: uuid("permission_table_id").notNull(),
+    permissionTableId: text("permission_table_id").notNull(),
     permissionTableRowFilterId: uuid("permission_table_row_filter_id").notNull(),
     ...createRowFilterValuePayloadColumns(),
   },
@@ -178,7 +160,7 @@ export const userPermissionGroups = pgTable(
   {
     id: uuid("id").defaultRandom().notNull(),
     userId: text("user_id").notNull(),
-    permissionGroupId: uuid("permission_group_id").notNull(),
+    permissionGroupId: text("permission_group_id").notNull(),
     givenBy: text("given_by").notNull(),
     registrationDate: timestamp("registration_date").notNull(),
   },
@@ -198,20 +180,12 @@ export const userPermissionGroups = pgTable(
   ],
 );
 
-export const usersRelations = relations(users, ({ one, many }) => ({
-  userType: one(userTypes, {
-    fields: [users.userTypeId],
-    references: [userTypes.id],
-  }),
+export const usersRelations = relations(users, ({ many }) => ({
   catalogs: many(userCatalogs),
   uniquePopulations: many(userUniquePopulations),
   domains: many(userDomains),
   rowFilterValues: many(userRowFilterValues),
   permissionGroups: many(userPermissionGroups),
-}));
-
-export const userTypesRelations = relations(userTypes, ({ many }) => ({
-  users: many(users),
 }));
 
 export const userCatalogsRelations = relations(userCatalogs, ({ one, many }) => ({

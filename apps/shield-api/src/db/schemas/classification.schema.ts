@@ -1,9 +1,10 @@
-import { pgTable, primaryKey, text, uuid } from "drizzle-orm/pg-core";
+import { pgTable, primaryKey, text } from "drizzle-orm/pg-core";
+import { objectId } from "./shared.schema";
 
 export const classifications = pgTable(
   "classifications",
   {
-    id: uuid("id").defaultRandom().notNull(),
+    id: objectId("id"),
     displayName: text("display_name").notNull().unique(),
     description: text("description").notNull(),
   },

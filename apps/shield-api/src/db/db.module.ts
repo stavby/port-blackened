@@ -3,16 +3,19 @@ import { ConfigService } from "@nestjs/config";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { ConfigProps } from "src/config/config.interface";
 import { DATABASE_CONNECTION_TOKEN } from "./db-connections";
+import * as schemas from "./schemas";
+
+export type DrizzleConnection = ReturnType<typeof drizzle<typeof schemas>>;
 
 @Module({
   providers: [
     {
       provide: DATABASE_CONNECTION_TOKEN,
-      useFactory: async (configService: ConfigService<ConfigProps>) => {
+      useFactory: async (configService: ConfigService<ConfigProps>): Promise<DrizzleConnection> => {
         try {
           Logger.log("Connecting to PostgreSQL...");
-
-          return drizzle(configService.get("postgres.connectionString", { infer: true })!);
+          const connectionString = configService.get("postgres.connectionString", { infer: true })!;
+          return drizzle(connectionString, { schema: schemas });
         } catch (error) {
           throw new HttpException(`PostgreSQL connection error`, HttpStatus.INTERNAL_SERVER_ERROR, { cause: error });
         }

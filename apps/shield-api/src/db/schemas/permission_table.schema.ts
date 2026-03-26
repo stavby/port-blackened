@@ -1,5 +1,6 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { foreignKey, pgEnum, pgTable, primaryKey, text, unique, uuid } from "drizzle-orm/pg-core";
+import { objectId } from "./shared.schema";
 
 export const permissionTableRowFilterTypeEnum = pgEnum("permission_table_row_filter_type", ["integer", "string", "boolean"]);
 export const permissionTableRowFilterQueryBuilderTypeEnum = pgEnum("permission_table_row_filter_query_builder_type", [
@@ -11,7 +12,7 @@ export const permissionTableRowFilterQueryBuilderTypeEnum = pgEnum("permission_t
 export const permissionTables = pgTable(
   "permission_tables",
   {
-    id: uuid("id").defaultRandom().notNull(),
+    id: objectId("id"),
     name: text("name").notNull().unique(),
     displayName: text("display_name").notNull(),
   },
@@ -22,7 +23,7 @@ export const permissionTableRowFilters = pgTable(
   "permission_table_row_filters",
   {
     id: uuid("id").defaultRandom().notNull(),
-    permissionTableId: uuid("permission_table_id").notNull(),
+    permissionTableId: text("permission_table_id").notNull(),
     kod: text("kod").notNull(),
     displayName: text("display_name").notNull(),
     dimensionsTable: text("dimensions_table").notNull(),
@@ -45,7 +46,7 @@ export const permissionTableKeys = pgTable(
   "permission_table_keys",
   {
     id: uuid("id").defaultRandom().notNull(),
-    permissionTableId: uuid("permission_table_id").notNull(),
+    permissionTableId: text("permission_table_id").notNull(),
     name: text("name").notNull(),
     displayName: text("display_name").notNull(),
     trinoType: text("trino_type").notNull(),

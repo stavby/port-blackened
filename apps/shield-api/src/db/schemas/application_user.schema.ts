@@ -1,41 +1,37 @@
 import { relations } from "drizzle-orm";
-import { foreignKey, pgTable, uuid, text, timestamp, boolean, primaryKey, unique } from "drizzle-orm/pg-core";
+import { foreignKey, pgTable, uuid, text, boolean, primaryKey, unique } from "drizzle-orm/pg-core";
 import { classifications } from "./classification.schema";
 import { domains } from "./domain.schema";
 import { roles } from "./role.schema";
+import { createMetaAuditColumns } from "./shared.schema";
 
 export const applicationUsers = pgTable(
   "application_users",
   {
-    id: uuid("id").defaultRandom().notNull(),
-    userId: text("user_id").notNull().unique(),
+    userId: text("user_id").notNull(),
     firstName: text("first_name"),
     lastName: text("last_name"),
     isAdmin: boolean("is_admin").notNull(),
     canCreateConnections: boolean("can_create_connections").notNull(),
     canManageUniquePopulationIndications: boolean("can_manage_unique_population_indications").notNull(),
-    givenBy: text("given_by"),
-    lastUpdatedBy: text("last_updated_by"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    ...createMetaAuditColumns(),
   },
-  (table) => [primaryKey({ columns: [table.id], name: "app_usr_pk" })],
+  (table) => [primaryKey({ columns: [table.userId], name: "app_usr_pk" })],
 );
 
 export const applicationUserDomains = pgTable(
   "application_user_domains",
   {
     id: uuid("id").defaultRandom().notNull(),
-    applicationUserId: uuid("application_user_id").notNull(),
-    domainId: uuid("domain_id").notNull(),
+    applicationUserId: text("application_user_id").notNull(),
+    domainId: text("domain_id").notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.id], name: "app_usr_dom_pk" }),
-    unique("app_usr_dom_id_dom_uq").on(table.id, table.domainId),
     unique("app_usr_dom_uq").on(table.applicationUserId, table.domainId),
     foreignKey({
       columns: [table.applicationUserId],
-      foreignColumns: [applicationUsers.id],
+      foreignColumns: [applicationUsers.userId],
       name: "app_usr_dom_usr_fk",
     }).onDelete("cascade"),
     foreignKey({
@@ -71,7 +67,7 @@ export const applicationUserDomainClassifications = pgTable(
   "application_user_domain_classifications",
   {
     applicationUserDomainId: uuid("application_user_domain_id").notNull(),
-    classificationId: uuid("classification_id").notNull(),
+    classificationId: text("classification_id").notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.applicationUserDomainId, table.classificationId], name: "app_usr_dom_cls_pk" }),
@@ -95,7 +91,7 @@ export const applicationUsersRelations = relations(applicationUsers, ({ many }) 
 export const applicationUserDomainsRelations = relations(applicationUserDomains, ({ one, many }) => ({
   applicationUser: one(applicationUsers, {
     fields: [applicationUserDomains.applicationUserId],
-    references: [applicationUsers.id],
+    references: [applicationUsers.userId],
   }),
   domain: one(domains, {
     fields: [applicationUserDomains.domainId],

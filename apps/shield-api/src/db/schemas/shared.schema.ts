@@ -1,4 +1,12 @@
+import { ObjectIdBrand } from "@port/shield-schemas";
 import { boolean, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { ObjectId } from "mongodb";
+
+export const objectId = (name: string) =>
+  text(name)
+    .notNull()
+    .$default(() => new ObjectId().toHexString())
+    .$type<ObjectIdBrand>();
 
 export const createPermissionVisibilityColumns = () => ({
   shouldApplyMasking: boolean("should_apply_masking").notNull().default(false),
@@ -13,16 +21,16 @@ export const createMetaAuditColumns = () => ({
 });
 
 export const createDomainsColumns = () => ({
-  domainId: uuid("domain_id").notNull(),
+  domainId: text("domain_id").notNull(),
   ...createMetaAuditColumns(),
 });
 
 export const createDomainClassificationColumns = () => ({
-  classificationId: uuid("classification_id").notNull(),
+  classificationId: text("classification_id").notNull(),
 });
 
 export const createRowFilterValuePayloadColumns = () => ({
-  permissionTableId: uuid("permission_table_id").notNull(),
+  permissionTableId: text("permission_table_id").notNull(),
   permissionTableRowFilterId: uuid("permission_table_row_filter_id").notNull(),
   value: text("value").notNull(),
   displayName: text("display_name").notNull(),

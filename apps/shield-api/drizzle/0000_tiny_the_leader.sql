@@ -1,9 +1,11 @@
+CREATE TYPE "public"."operation_enum" AS ENUM('create', 'update', 'delete', 'clone');--> statement-breakpoint
+CREATE TYPE "public"."resource_type_enum" AS ENUM('application_user', 'classification', 'domain', 'permission_table', 'table', 'task', 'user', 'permission_group');--> statement-breakpoint
 CREATE TYPE "public"."permission_table_row_filter_query_builder_type" AS ENUM('select', 'tree', 'boolean');--> statement-breakpoint
 CREATE TYPE "public"."permission_table_row_filter_type" AS ENUM('integer', 'string', 'boolean');--> statement-breakpoint
 CREATE TYPE "public"."verification_stage_name" AS ENUM('technical_correctness', 'business_correctness', 'documentation_correctness');--> statement-breakpoint
 CREATE TABLE "application_user_domain_classifications" (
 	"application_user_domain_id" uuid NOT NULL,
-	"classification_id" uuid NOT NULL,
+	"classification_id" text NOT NULL,
 	CONSTRAINT "app_usr_dom_cls_pk" PRIMARY KEY("application_user_domain_id","classification_id")
 );
 --> statement-breakpoint
@@ -15,15 +17,13 @@ CREATE TABLE "application_user_domain_roles" (
 --> statement-breakpoint
 CREATE TABLE "application_user_domains" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
-	"application_user_id" uuid NOT NULL,
-	"domain_id" uuid NOT NULL,
+	"application_user_id" text NOT NULL,
+	"domain_id" text NOT NULL,
 	CONSTRAINT "app_usr_dom_pk" PRIMARY KEY("id"),
-	CONSTRAINT "app_usr_dom_id_dom_uq" UNIQUE("id","domain_id"),
 	CONSTRAINT "app_usr_dom_uq" UNIQUE("application_user_id","domain_id")
 );
 --> statement-breakpoint
 CREATE TABLE "application_users" (
-	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" text NOT NULL,
 	"first_name" text,
 	"last_name" text,
@@ -31,11 +31,10 @@ CREATE TABLE "application_users" (
 	"can_create_connections" boolean NOT NULL,
 	"can_manage_unique_population_indications" boolean NOT NULL,
 	"given_by" text,
+	"created_at" timestamp,
 	"last_updated_by" text,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL,
-	CONSTRAINT "app_usr_pk" PRIMARY KEY("id"),
-	CONSTRAINT "application_users_user_id_unique" UNIQUE("user_id")
+	"updated_at" timestamp,
+	CONSTRAINT "app_usr_pk" PRIMARY KEY("user_id")
 );
 --> statement-breakpoint
 CREATE TABLE "audit_log_changes" (
@@ -71,7 +70,7 @@ CREATE TABLE "auditing" (
 );
 --> statement-breakpoint
 CREATE TABLE "classifications" (
-	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
+	"id" text NOT NULL,
 	"display_name" text NOT NULL,
 	"description" text NOT NULL,
 	CONSTRAINT "cls_pk" PRIMARY KEY("id"),
@@ -79,13 +78,13 @@ CREATE TABLE "classifications" (
 );
 --> statement-breakpoint
 CREATE TABLE "domain_classifications" (
-	"domain_id" uuid NOT NULL,
-	"classification_id" uuid NOT NULL,
+	"domain_id" text NOT NULL,
+	"classification_id" text NOT NULL,
 	CONSTRAINT "dom_cls_pk" PRIMARY KEY("domain_id","classification_id")
 );
 --> statement-breakpoint
 CREATE TABLE "domains" (
-	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
+	"id" text NOT NULL,
 	"name" text NOT NULL,
 	"display_name" text NOT NULL,
 	CONSTRAINT "dom_pk" PRIMARY KEY("id"),
@@ -94,7 +93,7 @@ CREATE TABLE "domains" (
 --> statement-breakpoint
 CREATE TABLE "permission_group_co_owners" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
-	"permission_group_id" uuid NOT NULL,
+	"permission_group_id" text NOT NULL,
 	"user_id" text NOT NULL,
 	"user_name" text NOT NULL,
 	CONSTRAINT "perm_grp_co_pk" PRIMARY KEY("id"),
@@ -103,14 +102,14 @@ CREATE TABLE "permission_group_co_owners" (
 --> statement-breakpoint
 CREATE TABLE "permission_group_domain_classifications" (
 	"permission_group_domain_id" uuid NOT NULL,
-	"classification_id" uuid NOT NULL,
+	"classification_id" text NOT NULL,
 	CONSTRAINT "perm_grp_dom_cls_pk" PRIMARY KEY("permission_group_domain_id","classification_id")
 );
 --> statement-breakpoint
 CREATE TABLE "permission_group_domains" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
-	"permission_group_id" uuid NOT NULL,
-	"domain_id" uuid NOT NULL,
+	"permission_group_id" text NOT NULL,
+	"domain_id" text NOT NULL,
 	"given_by" text,
 	"created_at" timestamp,
 	"last_updated_by" text,
@@ -121,8 +120,8 @@ CREATE TABLE "permission_group_domains" (
 --> statement-breakpoint
 CREATE TABLE "permission_group_row_filter_values" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
-	"permission_group_id" uuid NOT NULL,
-	"permission_table_id" uuid NOT NULL,
+	"permission_group_id" text NOT NULL,
+	"permission_table_id" text NOT NULL,
 	"permission_table_row_filter_id" uuid NOT NULL,
 	"value" text NOT NULL,
 	"display_name" text NOT NULL,
@@ -134,7 +133,7 @@ CREATE TABLE "permission_group_row_filter_values" (
 );
 --> statement-breakpoint
 CREATE TABLE "permission_groups" (
-	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
+	"id" text NOT NULL,
 	"name" text NOT NULL,
 	"owner_id" text NOT NULL,
 	"owner_name" text NOT NULL,
@@ -148,7 +147,7 @@ CREATE TABLE "permission_groups" (
 --> statement-breakpoint
 CREATE TABLE "permission_table_keys" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
-	"permission_table_id" uuid NOT NULL,
+	"permission_table_id" text NOT NULL,
 	"name" text NOT NULL,
 	"display_name" text NOT NULL,
 	"trino_type" text NOT NULL,
@@ -157,7 +156,7 @@ CREATE TABLE "permission_table_keys" (
 --> statement-breakpoint
 CREATE TABLE "permission_table_row_filters" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
-	"permission_table_id" uuid NOT NULL,
+	"permission_table_id" text NOT NULL,
 	"kod" text NOT NULL,
 	"display_name" text NOT NULL,
 	"dimensions_table" text NOT NULL,
@@ -169,7 +168,7 @@ CREATE TABLE "permission_table_row_filters" (
 );
 --> statement-breakpoint
 CREATE TABLE "permission_tables" (
-	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
+	"id" text NOT NULL,
 	"name" text NOT NULL,
 	"display_name" text NOT NULL,
 	CONSTRAINT "perm_tbl_pk" PRIMARY KEY("id"),
@@ -221,7 +220,7 @@ CREATE TABLE "table_columns" (
 	"column_desc" text DEFAULT '' NOT NULL,
 	"is_key" boolean DEFAULT false NOT NULL,
 	"auth_key" text,
-	"classification_id" uuid,
+	"classification_id" text,
 	"mask_id" uuid,
 	CONSTRAINT "tbl_col_pk" PRIMARY KEY("id"),
 	CONSTRAINT "tbl_col_uq" UNIQUE("table_id","column_name")
@@ -243,8 +242,8 @@ CREATE TABLE "tables" (
 	"table_name" text NOT NULL,
 	"table_display_name" text DEFAULT '' NOT NULL,
 	"table_desc" text DEFAULT '' NOT NULL,
-	"domain_id" uuid NOT NULL,
-	"permission_table_id" uuid,
+	"domain_id" text NOT NULL,
+	"permission_table_id" text,
 	"owner_id" text NOT NULL,
 	"source_type" text,
 	"connection_display_name" text,
@@ -293,14 +292,14 @@ CREATE TABLE "user_catalogs" (
 --> statement-breakpoint
 CREATE TABLE "user_domain_classifications" (
 	"user_domain_id" uuid NOT NULL,
-	"classification_id" uuid NOT NULL,
+	"classification_id" text NOT NULL,
 	CONSTRAINT "usr_dom_cls_pk" PRIMARY KEY("user_domain_id","classification_id")
 );
 --> statement-breakpoint
 CREATE TABLE "user_domains" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" text NOT NULL,
-	"domain_id" uuid NOT NULL,
+	"domain_id" text NOT NULL,
 	"given_by" text,
 	"created_at" timestamp,
 	"last_updated_by" text,
@@ -312,7 +311,7 @@ CREATE TABLE "user_domains" (
 CREATE TABLE "user_permission_groups" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" text NOT NULL,
-	"permission_group_id" uuid NOT NULL,
+	"permission_group_id" text NOT NULL,
 	"given_by" text NOT NULL,
 	"registration_date" timestamp NOT NULL,
 	CONSTRAINT "usr_pg_pk" PRIMARY KEY("id"),
@@ -322,7 +321,7 @@ CREATE TABLE "user_permission_groups" (
 CREATE TABLE "user_row_filter_values" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" text NOT NULL,
-	"permission_table_id" uuid NOT NULL,
+	"permission_table_id" text NOT NULL,
 	"permission_table_row_filter_id" uuid NOT NULL,
 	"value" text NOT NULL,
 	"display_name" text NOT NULL,
@@ -333,13 +332,6 @@ CREATE TABLE "user_row_filter_values" (
 	CONSTRAINT "usr_rfv_pk" PRIMARY KEY("id")
 );
 --> statement-breakpoint
-CREATE TABLE "user_types" (
-	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
-	"display_name" text NOT NULL,
-	CONSTRAINT "usr_type_pk" PRIMARY KEY("id"),
-	CONSTRAINT "user_types_display_name_unique" UNIQUE("display_name")
-);
---> statement-breakpoint
 CREATE TABLE "user_unique_populations" (
 	"user_id" text NOT NULL,
 	"value" integer NOT NULL,
@@ -347,18 +339,18 @@ CREATE TABLE "user_unique_populations" (
 );
 --> statement-breakpoint
 CREATE TABLE "users" (
-	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
+	"id" text,
 	"user_id" text NOT NULL,
 	"first_name" text,
 	"last_name" text,
 	"should_apply_masking" boolean DEFAULT false NOT NULL,
 	"can_view_deceased" boolean DEFAULT false NOT NULL,
-	"user_type_id" uuid NOT NULL,
 	"can_impersonate" boolean DEFAULT false NOT NULL,
 	"impersonate_expression" text,
 	"is_blocked" boolean,
 	"is_sap_permitted" boolean DEFAULT false NOT NULL,
 	CONSTRAINT "usr_pk" PRIMARY KEY("user_id"),
+	CONSTRAINT "users_id_unique" UNIQUE("id"),
 	CONSTRAINT "usr_id_uq" UNIQUE("id")
 );
 --> statement-breakpoint
@@ -366,7 +358,7 @@ ALTER TABLE "application_user_domain_classifications" ADD CONSTRAINT "app_usr_do
 ALTER TABLE "application_user_domain_classifications" ADD CONSTRAINT "app_usr_dom_cls_fk_ud" FOREIGN KEY ("application_user_domain_id") REFERENCES "public"."application_user_domains"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "application_user_domain_roles" ADD CONSTRAINT "app_usr_dom_role_dom_fk" FOREIGN KEY ("application_user_domain_id") REFERENCES "public"."application_user_domains"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "application_user_domain_roles" ADD CONSTRAINT "app_usr_dom_role_role_fk" FOREIGN KEY ("role_id") REFERENCES "public"."roles"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "application_user_domains" ADD CONSTRAINT "app_usr_dom_usr_fk" FOREIGN KEY ("application_user_id") REFERENCES "public"."application_users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "application_user_domains" ADD CONSTRAINT "app_usr_dom_usr_fk" FOREIGN KEY ("application_user_id") REFERENCES "public"."application_users"("user_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "application_user_domains" ADD CONSTRAINT "app_usr_dom_dom_fk" FOREIGN KEY ("domain_id") REFERENCES "public"."domains"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "audit_log_changes" ADD CONSTRAINT "aud_log_chg_log_fk" FOREIGN KEY ("audit_log_id") REFERENCES "public"."audit_logs"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "domain_classifications" ADD CONSTRAINT "dom_cls_dom_fk" FOREIGN KEY ("domain_id") REFERENCES "public"."domains"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -400,5 +392,4 @@ ALTER TABLE "user_permission_groups" ADD CONSTRAINT "usr_pg_pg_fk" FOREIGN KEY (
 ALTER TABLE "user_row_filter_values" ADD CONSTRAINT "usr_rfv_usr_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_row_filter_values" ADD CONSTRAINT "usr_rfv_tbl_fk" FOREIGN KEY ("permission_table_id") REFERENCES "public"."permission_tables"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_row_filter_values" ADD CONSTRAINT "usr_rfv_rf_tbl_fk" FOREIGN KEY ("permission_table_row_filter_id","permission_table_id") REFERENCES "public"."permission_table_row_filters"("id","permission_table_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "user_unique_populations" ADD CONSTRAINT "usr_up_usr_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "users" ADD CONSTRAINT "usr_type_fk" FOREIGN KEY ("user_type_id") REFERENCES "public"."user_types"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "user_unique_populations" ADD CONSTRAINT "usr_up_usr_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE cascade ON UPDATE no action;

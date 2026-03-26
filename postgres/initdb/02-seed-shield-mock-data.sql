@@ -6,23 +6,23 @@
 
 -- Base dictionaries
 INSERT INTO public.classifications (id, display_name, description) VALUES
-  ('10000000-0000-0000-0000-000000000001', 'Public', 'Publicly shareable data'),
-  ('10000000-0000-0000-0000-000000000002', 'Internal', 'Internal organizational data'),
-  ('10000000-0000-0000-0000-000000000003', 'Restricted', 'Restricted and sensitive data')
+  ('64f000000000000000000001', 'Public', 'Publicly shareable data'),
+  ('64f000000000000000000002', 'Internal', 'Internal organizational data'),
+  ('64f000000000000000000003', 'Restricted', 'Restricted and sensitive data')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.domains (id, name, display_name) VALUES
-  ('20000000-0000-0000-0000-000000000001', 'finance', 'Finance'),
-  ('20000000-0000-0000-0000-000000000002', 'hr', 'Human Resources'),
-  ('20000000-0000-0000-0000-000000000003', 'operations', 'Operations')
+  ('64f100000000000000000001', 'finance', 'Finance'),
+  ('64f100000000000000000002', 'hr', 'Human Resources'),
+  ('64f100000000000000000003', 'operations', 'Operations')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.domain_classifications (domain_id, classification_id) VALUES
-  ('20000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001'),
-  ('20000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000002'),
-  ('20000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001'),
-  ('20000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000003'),
-  ('20000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000002')
+  ('64f100000000000000000001', '64f000000000000000000001'),
+  ('64f100000000000000000001', '64f000000000000000000002'),
+  ('64f100000000000000000002', '64f000000000000000000001'),
+  ('64f100000000000000000002', '64f000000000000000000003'),
+  ('64f100000000000000000003', '64f000000000000000000002')
 ON CONFLICT (domain_id, classification_id) DO NOTHING;
 
 INSERT INTO public.roles (id, name, display_name, color, display_order) VALUES
@@ -31,15 +31,10 @@ INSERT INTO public.roles (id, name, display_name, color, display_order) VALUES
   ('30000000-0000-0000-0000-000000000003', 'owner', 'Owner', '#a855f7', 3)
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO public.user_types (id, display_name) VALUES
-  ('40000000-0000-0000-0000-000000000001', 'Standard'),
-  ('40000000-0000-0000-0000-000000000002', 'PowerUser')
-ON CONFLICT (id) DO NOTHING;
-
 -- Permission tables and filters
 INSERT INTO public.permission_tables (id, name, display_name) VALUES
-  ('50000000-0000-0000-0000-000000000001', 'events', 'Events'),
-  ('50000000-0000-0000-0000-000000000002', 'employees', 'Employees')
+  ('64f200000000000000000001', 'events', 'Events'),
+  ('64f200000000000000000002', 'employees', 'Employees')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.permission_table_row_filters (
@@ -51,14 +46,14 @@ INSERT INTO public.permission_table_row_filters (
   data_type,
   ui_control_type
 ) VALUES
-  ('51000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', 'region', 'Region', 'dim_region', 'string', 'select'),
-  ('51000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000001', 'event_type', 'Event Type', 'dim_event_type', 'string', 'select'),
-  ('51000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000002', 'department', 'Department', 'dim_department', 'string', 'select')
+  ('51000000-0000-0000-0000-000000000001', '64f200000000000000000001', 'region', 'Region', 'dim_region', 'string', 'select'),
+  ('51000000-0000-0000-0000-000000000002', '64f200000000000000000001', 'event_type', 'Event Type', 'dim_event_type', 'string', 'select'),
+  ('51000000-0000-0000-0000-000000000003', '64f200000000000000000002', 'department', 'Department', 'dim_department', 'string', 'select')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.permission_table_keys (id, permission_table_id, name, display_name, trino_type) VALUES
-  ('52000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', 'event_id', 'Event ID', 'varchar'),
-  ('52000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000002', 'employee_id', 'Employee ID', 'varchar')
+  ('52000000-0000-0000-0000-000000000001', '64f200000000000000000001', 'event_id', 'Event ID', 'varchar'),
+  ('52000000-0000-0000-0000-000000000002', '64f200000000000000000002', 'employee_id', 'Employee ID', 'varchar')
 ON CONFLICT (id) DO NOTHING;
 
 -- Users and dependent tables
@@ -69,15 +64,14 @@ INSERT INTO public.users (
   last_name,
   should_apply_masking,
   can_view_deceased,
-  user_type_id,
   can_impersonate,
   impersonate_expression,
   is_blocked,
   is_sap_permitted
 ) VALUES
-  ('60000000-0000-0000-0000-000000000001', 'alice', 'Alice', 'Carter', false, false, '40000000-0000-0000-0000-000000000001', false, null, false, true),
-  ('60000000-0000-0000-0000-000000000002', 'bob', 'Bob', 'Nguyen', true, false, '40000000-0000-0000-0000-000000000002', true, 'department = ''Engineering''', false, false),
-  ('60000000-0000-0000-0000-000000000003', 'carla', 'Carla', 'Mendez', false, true, '40000000-0000-0000-0000-000000000001', false, null, false, false)
+  ('60000000-0000-0000-0000-000000000001', 'alice', 'Alice', 'Carter', false, false, false, null, false, true),
+  ('60000000-0000-0000-0000-000000000002', 'bob', 'Bob', 'Nguyen', true, false, true, 'department = ''Engineering''', false, false),
+  ('60000000-0000-0000-0000-000000000003', 'carla', 'Carla', 'Mendez', false, true, false, null, false, false)
 ON CONFLICT (user_id) DO NOTHING;
 
 INSERT INTO public.user_catalogs (id, user_id, catalog_name, write_all, read_all) VALUES
@@ -97,15 +91,15 @@ INSERT INTO public.user_unique_populations (user_id, value) VALUES
 ON CONFLICT (user_id, value) DO NOTHING;
 
 INSERT INTO public.user_domains (id, user_id, domain_id, given_by, created_at, last_updated_by, updated_at) VALUES
-  ('62000000-0000-0000-0000-000000000001', 'alice', '20000000-0000-0000-0000-000000000001', 'system', now(), 'system', now()),
-  ('62000000-0000-0000-0000-000000000002', 'bob', '20000000-0000-0000-0000-000000000002', 'system', now(), 'system', now()),
-  ('62000000-0000-0000-0000-000000000003', 'carla', '20000000-0000-0000-0000-000000000003', 'system', now(), 'system', now())
+  ('62000000-0000-0000-0000-000000000001', 'alice', '64f100000000000000000001', 'system', now(), 'system', now()),
+  ('62000000-0000-0000-0000-000000000002', 'bob', '64f100000000000000000002', 'system', now(), 'system', now()),
+  ('62000000-0000-0000-0000-000000000003', 'carla', '64f100000000000000000003', 'system', now(), 'system', now())
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.user_domain_classifications (user_domain_id, classification_id) VALUES
-  ('62000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000002'),
-  ('62000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000003'),
-  ('62000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001')
+  ('62000000-0000-0000-0000-000000000001', '64f000000000000000000002'),
+  ('62000000-0000-0000-0000-000000000002', '64f000000000000000000003'),
+  ('62000000-0000-0000-0000-000000000003', '64f000000000000000000001')
 ON CONFLICT (user_domain_id, classification_id) DO NOTHING;
 
 INSERT INTO public.user_row_filter_values (
@@ -120,8 +114,8 @@ INSERT INTO public.user_row_filter_values (
   last_updated_by,
   updated_at
 ) VALUES
-  ('63000000-0000-0000-0000-000000000001', 'alice', '50000000-0000-0000-0000-000000000001', '51000000-0000-0000-0000-000000000001', 'R001', 'North', 'system', now(), 'system', now()),
-  ('63000000-0000-0000-0000-000000000002', 'bob', '50000000-0000-0000-0000-000000000002', '51000000-0000-0000-0000-000000000003', 'D001', 'Engineering', 'system', now(), 'system', now())
+  ('63000000-0000-0000-0000-000000000001', 'alice', '64f200000000000000000001', '51000000-0000-0000-0000-000000000001', 'R001', 'North', 'system', now(), 'system', now()),
+  ('63000000-0000-0000-0000-000000000002', 'bob', '64f200000000000000000002', '51000000-0000-0000-0000-000000000003', 'D001', 'Engineering', 'system', now(), 'system', now())
 ON CONFLICT (id) DO NOTHING;
 
 -- Permission groups and dependent tables
@@ -135,12 +129,12 @@ INSERT INTO public.permission_groups (
   should_apply_masking,
   can_view_deceased
 ) VALUES
-  ('70000000-0000-0000-0000-000000000001', 'Finance_Readers', 'alice', 'Alice Carter', 'Read-only finance access', '#06b6d4', false, false),
-  ('70000000-0000-0000-0000-000000000002', 'HR_Operators', 'bob', 'Bob Nguyen', 'HR operations group', '#f59e0b', true, false)
+  ('64f300000000000000000001', 'Finance_Readers', 'alice', 'Alice Carter', 'Read-only finance access', '#06b6d4', false, false),
+  ('64f300000000000000000002', 'HR_Operators', 'bob', 'Bob Nguyen', 'HR operations group', '#f59e0b', true, false)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.permission_group_co_owners (id, permission_group_id, user_id, user_name) VALUES
-  ('71000000-0000-0000-0000-000000000001', '70000000-0000-0000-0000-000000000001', 'carla', 'Carla Mendez')
+  ('71000000-0000-0000-0000-000000000001', '64f300000000000000000001', 'carla', 'Carla Mendez')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.permission_group_domains (
@@ -152,13 +146,13 @@ INSERT INTO public.permission_group_domains (
   last_updated_by,
   updated_at
 ) VALUES
-  ('72000000-0000-0000-0000-000000000001', '70000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'system', now(), 'system', now()),
-  ('72000000-0000-0000-0000-000000000002', '70000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000002', 'system', now(), 'system', now())
+  ('72000000-0000-0000-0000-000000000001', '64f300000000000000000001', '64f100000000000000000001', 'system', now(), 'system', now()),
+  ('72000000-0000-0000-0000-000000000002', '64f300000000000000000002', '64f100000000000000000002', 'system', now(), 'system', now())
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.permission_group_domain_classifications (permission_group_domain_id, classification_id) VALUES
-  ('72000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000002'),
-  ('72000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000003')
+  ('72000000-0000-0000-0000-000000000001', '64f000000000000000000002'),
+  ('72000000-0000-0000-0000-000000000002', '64f000000000000000000003')
 ON CONFLICT (permission_group_domain_id, classification_id) DO NOTHING;
 
 INSERT INTO public.permission_group_row_filter_values (
@@ -173,18 +167,17 @@ INSERT INTO public.permission_group_row_filter_values (
   last_updated_by,
   updated_at
 ) VALUES
-  ('73000000-0000-0000-0000-000000000001', '70000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', '51000000-0000-0000-0000-000000000001', 'R002', 'Center', 'system', now(), 'system', now()),
-  ('73000000-0000-0000-0000-000000000002', '70000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000002', '51000000-0000-0000-0000-000000000003', 'D002', 'Analytics', 'system', now(), 'system', now())
+  ('73000000-0000-0000-0000-000000000001', '64f300000000000000000001', '64f200000000000000000001', '51000000-0000-0000-0000-000000000001', 'R002', 'Center', 'system', now(), 'system', now()),
+  ('73000000-0000-0000-0000-000000000002', '64f300000000000000000002', '64f200000000000000000002', '51000000-0000-0000-0000-000000000003', 'D002', 'Analytics', 'system', now(), 'system', now())
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.user_permission_groups (id, user_id, permission_group_id, given_by, registration_date) VALUES
-  ('74000000-0000-0000-0000-000000000001', 'alice', '70000000-0000-0000-0000-000000000001', 'system', now()),
-  ('74000000-0000-0000-0000-000000000002', 'bob', '70000000-0000-0000-0000-000000000002', 'system', now())
+  ('74000000-0000-0000-0000-000000000001', 'alice', '64f300000000000000000001', 'system', now()),
+  ('74000000-0000-0000-0000-000000000002', 'bob', '64f300000000000000000002', 'system', now())
 ON CONFLICT (id) DO NOTHING;
 
 -- Application users model
 INSERT INTO public.application_users (
-  id,
   user_id,
   first_name,
   last_name,
@@ -196,13 +189,13 @@ INSERT INTO public.application_users (
   created_at,
   updated_at
 ) VALUES
-  ('80000000-0000-0000-0000-000000000001', 'alice', 'Alice', 'Carter', true, true, true, 'system', 'system', now(), now()),
-  ('80000000-0000-0000-0000-000000000002', 'bob', 'Bob', 'Nguyen', false, true, false, 'system', 'system', now(), now())
-ON CONFLICT (id) DO NOTHING;
+  ('alice', 'Alice', 'Carter', true, true, true, 'system', 'system', now(), now()),
+  ('bob', 'Bob', 'Nguyen', false, true, false, 'system', 'system', now(), now())
+ON CONFLICT (user_id) DO NOTHING;
 
 INSERT INTO public.application_user_domains (id, application_user_id, domain_id) VALUES
-  ('81000000-0000-0000-0000-000000000001', '80000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001'),
-  ('81000000-0000-0000-0000-000000000002', '80000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000002')
+  ('81000000-0000-0000-0000-000000000001', 'alice', '64f100000000000000000001'),
+  ('81000000-0000-0000-0000-000000000002', 'bob', '64f100000000000000000002')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.application_user_domain_roles (application_user_domain_id, role_id) VALUES
@@ -211,8 +204,8 @@ INSERT INTO public.application_user_domain_roles (application_user_domain_id, ro
 ON CONFLICT (application_user_domain_id, role_id) DO NOTHING;
 
 INSERT INTO public.application_user_domain_classifications (application_user_domain_id, classification_id) VALUES
-  ('81000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000002'),
-  ('81000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000003')
+  ('81000000-0000-0000-0000-000000000001', '64f000000000000000000002'),
+  ('81000000-0000-0000-0000-000000000002', '64f000000000000000000003')
 ON CONFLICT (application_user_domain_id, classification_id) DO NOTHING;
 
 -- Data catalog tables
@@ -249,8 +242,8 @@ INSERT INTO public.tables (
     'events',
     'Events',
     'Main events table',
-    '20000000-0000-0000-0000-000000000001',
-    '50000000-0000-0000-0000-000000000001',
+    '64f100000000000000000001',
+    '64f200000000000000000001',
     'alice',
     'trino',
     'datalake-main',
@@ -270,8 +263,8 @@ INSERT INTO public.tables (
     'employees',
     'Employees',
     'Employee master table',
-    '20000000-0000-0000-0000-000000000002',
-    '50000000-0000-0000-0000-000000000002',
+    '64f100000000000000000002',
+    '64f200000000000000000002',
     'bob',
     'trino',
     'datalake-main',
@@ -298,10 +291,10 @@ INSERT INTO public.table_columns (
   classification_id,
   mask_id
 ) VALUES
-  ('92000000-0000-0000-0000-000000000001', '91000000-0000-0000-0000-000000000001', 'event_id', 'varchar', 'Event ID', 'Unique event identifier', true, 'event_id', '10000000-0000-0000-0000-000000000001', null),
-  ('92000000-0000-0000-0000-000000000002', '91000000-0000-0000-0000-000000000001', 'region', 'varchar', 'Region', 'Geographic region', false, 'region', '10000000-0000-0000-0000-000000000002', null),
-  ('92000000-0000-0000-0000-000000000003', '91000000-0000-0000-0000-000000000002', 'employee_id', 'varchar', 'Employee ID', 'Unique employee id', true, 'employee_id', '10000000-0000-0000-0000-000000000001', null),
-  ('92000000-0000-0000-0000-000000000004', '91000000-0000-0000-0000-000000000002', 'salary', 'numeric', 'Salary', 'Sensitive compensation field', false, 'salary', '10000000-0000-0000-0000-000000000003', '90000000-0000-0000-0000-000000000001')
+  ('92000000-0000-0000-0000-000000000001', '91000000-0000-0000-0000-000000000001', 'event_id', 'varchar', 'Event ID', 'Unique event identifier', true, 'event_id', '64f000000000000000000001', null),
+  ('92000000-0000-0000-0000-000000000002', '91000000-0000-0000-0000-000000000001', 'region', 'varchar', 'Region', 'Geographic region', false, 'region', '64f000000000000000000002', null),
+  ('92000000-0000-0000-0000-000000000003', '91000000-0000-0000-0000-000000000002', 'employee_id', 'varchar', 'Employee ID', 'Unique employee id', true, 'employee_id', '64f000000000000000000001', null),
+  ('92000000-0000-0000-0000-000000000004', '91000000-0000-0000-0000-000000000002', 'salary', 'numeric', 'Salary', 'Sensitive compensation field', false, 'salary', '64f000000000000000000003', '90000000-0000-0000-0000-000000000001')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.table_co_owners (id, table_id, owner_id, owner_name) VALUES

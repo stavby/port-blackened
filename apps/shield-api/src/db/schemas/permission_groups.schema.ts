@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { foreignKey, pgTable, primaryKey, text, unique, uuid } from "drizzle-orm/pg-core";
 import { classifications } from "./classification.schema";
 import { domains } from "./domain.schema";
@@ -8,12 +8,13 @@ import {
   createDomainsColumns,
   createPermissionVisibilityColumns,
   createRowFilterValuePayloadColumns,
+  objectId,
 } from "./shared.schema";
 
 export const permissionGroups = pgTable(
   "permission_groups",
   {
-    id: uuid("id").defaultRandom().notNull(),
+    id: objectId("id"),
     name: text("name").notNull().unique(),
     ownerId: text("owner_id").notNull(),
     ownerName: text("owner_name").notNull(),
@@ -28,7 +29,7 @@ export const permissionGroupCoOwners = pgTable(
   "permission_group_co_owners",
   {
     id: uuid("id").defaultRandom().notNull(),
-    permissionGroupId: uuid("permission_group_id").notNull(),
+    permissionGroupId: text("permission_group_id").notNull(),
     userId: text("user_id").notNull(),
     userName: text("user_name").notNull(),
   },
@@ -47,7 +48,7 @@ export const permissionGroupDomains = pgTable(
   "permission_group_domains",
   {
     id: uuid("id").defaultRandom().notNull(),
-    permissionGroupId: uuid("permission_group_id").notNull(),
+    permissionGroupId: text("permission_group_id").notNull(),
     ...createDomainsColumns(),
   },
   (table) => [
@@ -91,7 +92,7 @@ export const permissionGroupRowFilterValues = pgTable(
   "permission_group_row_filter_values",
   {
     id: uuid("id").defaultRandom().notNull(),
-    permissionGroupId: uuid("permission_group_id").notNull(),
+    permissionGroupId: text("permission_group_id").notNull(),
     ...createRowFilterValuePayloadColumns(),
   },
   (table) => [

@@ -1,5 +1,5 @@
 {
-  "id": "7f1410e7-7dd3-49ed-a43e-09d6766769d5",
+  "id": "d0789e65-3ec5-407d-8233-806470bf9dcf",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -16,7 +16,7 @@
         },
         "classification_id": {
           "name": "classification_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         }
@@ -137,13 +137,13 @@
         },
         "application_user_id": {
           "name": "application_user_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
         "domain_id": {
           "name": "domain_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         }
@@ -158,7 +158,7 @@
             "application_user_id"
           ],
           "columnsTo": [
-            "id"
+            "user_id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
@@ -186,14 +186,6 @@
         }
       },
       "uniqueConstraints": {
-        "app_usr_dom_id_dom_uq": {
-          "name": "app_usr_dom_id_dom_uq",
-          "nullsNotDistinct": false,
-          "columns": [
-            "id",
-            "domain_id"
-          ]
-        },
         "app_usr_dom_uq": {
           "name": "app_usr_dom_uq",
           "nullsNotDistinct": false,
@@ -211,13 +203,6 @@
       "name": "application_users",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
         "user_id": {
           "name": "user_id",
           "type": "text",
@@ -260,25 +245,23 @@
           "primaryKey": false,
           "notNull": false
         },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
         "last_updated_by": {
           "name": "last_updated_by",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
+          "notNull": false
         }
       },
       "indexes": {},
@@ -287,19 +270,11 @@
         "app_usr_pk": {
           "name": "app_usr_pk",
           "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {
-        "application_users_user_id_unique": {
-          "name": "application_users_user_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
             "user_id"
           ]
         }
       },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -511,10 +486,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "display_name": {
           "name": "display_name",
@@ -558,13 +532,13 @@
       "columns": {
         "domain_id": {
           "name": "domain_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
         "classification_id": {
           "name": "classification_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         }
@@ -618,10 +592,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "name": {
           "name": "name",
@@ -672,7 +645,7 @@
         },
         "permission_group_id": {
           "name": "permission_group_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -739,7 +712,7 @@
         },
         "classification_id": {
           "name": "classification_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         }
@@ -800,13 +773,13 @@
         },
         "permission_group_id": {
           "name": "permission_group_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
         "domain_id": {
           "name": "domain_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -899,13 +872,13 @@
         },
         "permission_group_id": {
           "name": "permission_group_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
         "permission_table_id": {
           "name": "permission_table_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -1015,10 +988,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "name": {
           "name": "name",
@@ -1102,7 +1074,7 @@
         },
         "permission_table_id": {
           "name": "permission_table_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -1167,7 +1139,7 @@
         },
         "permission_table_id": {
           "name": "permission_table_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -1256,10 +1228,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "name": {
           "name": "name",
@@ -1584,7 +1555,7 @@
         },
         "classification_id": {
           "name": "classification_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -1773,13 +1744,13 @@
         },
         "domain_id": {
           "name": "domain_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
         "permission_table_id": {
           "name": "permission_table_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -2141,7 +2112,7 @@
         },
         "classification_id": {
           "name": "classification_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         }
@@ -2208,7 +2179,7 @@
         },
         "domain_id": {
           "name": "domain_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -2307,7 +2278,7 @@
         },
         "permission_group_id": {
           "name": "permission_group_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -2394,7 +2365,7 @@
         },
         "permission_table_id": {
           "name": "permission_table_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -2498,47 +2469,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.user_types": {
-      "name": "user_types",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "display_name": {
-          "name": "display_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "usr_type_pk": {
-          "name": "usr_type_pk",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {
-        "user_types_display_name_unique": {
-          "name": "user_types_display_name_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "display_name"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.user_unique_populations": {
       "name": "user_unique_populations",
       "schema": "",
@@ -2592,10 +2522,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": false
         },
         "user_id": {
           "name": "user_id",
@@ -2629,12 +2558,6 @@
           "notNull": true,
           "default": false
         },
-        "user_type_id": {
-          "name": "user_type_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
         "can_impersonate": {
           "name": "can_impersonate",
           "type": "boolean",
@@ -2663,21 +2586,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "usr_type_fk": {
-          "name": "usr_type_fk",
-          "tableFrom": "users",
-          "tableTo": "user_types",
-          "columnsFrom": [
-            "user_type_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {
         "usr_pk": {
           "name": "usr_pk",
@@ -2687,6 +2596,13 @@
         }
       },
       "uniqueConstraints": {
+        "users_id_unique": {
+          "name": "users_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        },
         "usr_id_uq": {
           "name": "usr_id_uq",
           "nullsNotDistinct": false,
@@ -2701,6 +2617,30 @@
     }
   },
   "enums": {
+    "public.operation_enum": {
+      "name": "operation_enum",
+      "schema": "public",
+      "values": [
+        "create",
+        "update",
+        "delete",
+        "clone"
+      ]
+    },
+    "public.resource_type_enum": {
+      "name": "resource_type_enum",
+      "schema": "public",
+      "values": [
+        "application_user",
+        "classification",
+        "domain",
+        "permission_table",
+        "table",
+        "task",
+        "user",
+        "permission_group"
+      ]
+    },
     "public.permission_table_row_filter_query_builder_type": {
       "name": "permission_table_row_filter_query_builder_type",
       "schema": "public",

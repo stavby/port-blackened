@@ -1,11 +1,12 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { foreignKey, pgTable, text, uuid, primaryKey } from "drizzle-orm/pg-core";
 import { classifications } from "./classification.schema";
+import { objectId } from "./shared.schema";
 
 export const domains = pgTable(
   "domains",
   {
-    id: uuid("id").defaultRandom().notNull(),
+    id: objectId("id"),
     name: text("name").notNull().unique(),
     displayName: text("display_name").notNull(),
   },
@@ -15,8 +16,8 @@ export const domains = pgTable(
 export const domainClassifications = pgTable(
   "domain_classifications",
   {
-    domainId: uuid("domain_id").notNull(),
-    classificationId: uuid("classification_id").notNull(),
+    domainId: text("domain_id").notNull(),
+    classificationId: text("classification_id").notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.domainId, table.classificationId], name: "dom_cls_pk" }),

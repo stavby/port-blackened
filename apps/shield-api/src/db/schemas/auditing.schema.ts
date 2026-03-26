@@ -2,9 +2,9 @@ import { Difference } from "@port/shield-models";
 import { relations } from "drizzle-orm";
 import { foreignKey, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
-const operationEnum = pgEnum("operation_enum", ["create", "update", "delete", "clone"]);
+export const operationEnum = pgEnum("operation_enum", ["create", "update", "delete", "clone"]);
 
-const resourceTypeEnum = pgEnum("resource_type_enum", [
+export const resourceTypeEnum = pgEnum("resource_type_enum", [
   "application_user",
   "classification",
   "domain",
